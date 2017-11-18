@@ -9,8 +9,6 @@
     Website: phuchduong.io
     Linkedin: https://www.linkedin.com/in/phuchduong/
 '''
-from bs4 import BeautifulSoup       # html data structure
-# from urllib.request import urlopen
 from string import ascii_lowercase  # the alphabet a-z
 from selenium import webdriver      # autonomous webpage client
 from selenium.common.exceptions import NoSuchElementException
@@ -44,36 +42,45 @@ p_type = "6"
     # print(c)
 
 p_letter = 'z'
-target_url = base_url + "?letter=" + p_letter + "&type" + p_type + "&limit=99&start=0"
+target_url = base_url + "?letter=" + p_letter + "&type=" + p_type + "&limit=99&start=0"
 
 # turn on the web client, must be downloaded from:
 # https://sites.google.com/a/chromium.org/chromedriver/downloads
 # note: firefox also has one too
 chrome_driver_path = "chromedriver.exe"
-driver = webdriver.Chrome(executable_path = chrome_driver_path)
+driver = webdriver.Chrome(executable_path=chrome_driver_path)
 
 # tells the bot browser to the url
 driver.get(target_url)
 
-# grabs elements holding the item-id and display name
-titles = driver.find_elements_by_css_selector('h3.table-head')
-
 parsed_items = {}
 
+# grabs elements holding the item-id and display name
+
+# parse item_id and display_name
+titles = driver.find_elements_by_css_selector('h3.table-head')
 for i in range(1, len(titles)):
     # loops through each title, skipping the first one.
     id_name = titles[i].text
-
     print("Found..." + id_name)
-
     # separates item_id from item display name
     sep = id_name.find(" ")  # finds the first space
     item_id = id_name[:sep]
     display_name = id_name[(sep + 1):]
-
-    # add to dictonary
+    # add to item dictonary
     parsed_items[item_id] = {"display_name": display_name}
 
+# find and parse item details
+# isolates the div housing the table
+query_divs = driver.find_elements_by_id("ajax")
+i_tables = query_divs[0].find_elements_by_tag_name("tbody")
+
+# for i_table in i_tables:
+for tbody in i_tables:
+    col_headers = tbody.find_elements_by_tag_name("th")
+    col_value = tbody.find_elements_by_tag_name("td")
+
+# prints the items found and its details
 for item in parsed_items:
     print(item + "," + str(parsed_items[item]["display_name"]))
 
