@@ -60,30 +60,30 @@ titles = driver.find_elements_by_css_selector('h3.table-head')
 
 parsed_items = {}
 
-for i in range (1, len(titles)):
-	# loops through each title, skipping the first one.
-	id_name = titles[i].text
+for i in range(1, len(titles)):
+    # loops through each title, skipping the first one.
+    id_name = titles[i].text
 
-	print("Found..." + id_name)
+    print("Found..." + id_name)
 
-	# separates item_id from item display name
-	sep = id_name.find(" ")  # finds the first space
-	item_id = id_name[:sep]
-	display_name = id_name[(sep + 1):]
+    # separates item_id from item display name
+    sep = id_name.find(" ")  # finds the first space
+    item_id = id_name[:sep]
+    display_name = id_name[(sep + 1):]
 
-	# add to dictonary
-	parsed_items[item_id] = {"display_name": display_name}
+    # add to dictonary
+    parsed_items[item_id] = {"display_name": display_name}
 
 for item in parsed_items:
-	print(item + "," + str(parsed_items[item]["display_name"]))
+    print(item + "," + str(parsed_items[item]["display_name"]))
 
 # Closes the browser
-driver.quit()
+# driver.quit()
 # try:
-# 	# If there is a next button in the pagnation, click it
-# 	next_button = driver.find_element_by_xpath("//a[text()='Next']")
-# 	next_button.click()
+#   # If there is a next button in the pagnation, click it
+#   next_button = driver.find_element_by_xpath("//a[text()='Next']")
+#   next_button.click()
 
-# 	# recursion: scrape page
+#   # recursion: scrape page
 # except NoSuchElementException as e:
-# 	pass
+#   pass
