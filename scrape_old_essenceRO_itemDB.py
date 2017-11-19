@@ -53,36 +53,44 @@ driver = webdriver.Chrome(executable_path=chrome_driver_path)
 # tells the bot browser to the url
 driver.get(target_url)
 
-parsed_items = {}
+parsed_items = []
 
-# grabs elements holding the item-id and display name
+# isolates the div housing the item tables
+query_divs = driver.find_elements_by_id("ajax")
+
+# grabs a list of WebElements holding the item-id and display name
+titles = query_divs[0].find_elements_by_css_selector('h3.table-head')
+
+# grabs a list of WebElements holding the item details
+i_tables = query_divs[0].find_elements_by_tag_name("tbody")
 
 # parse item_id and display_name
-titles = driver.find_elements_by_css_selector('h3.table-head')
 for i in range(1, len(titles)):
     # loops through each title, skipping the first one.
     id_name = titles[i].text
-    print("Found..." + id_name)
+    print("Found... " + id_name)
+
     # separates item_id from item display name
-    sep = id_name.find(" ")  # finds the first space
+    sep = id_name.find(" ")  # finds the first space separation
     item_id = id_name[:sep]
     display_name = id_name[(sep + 1):]
-    # add to item dictonary
-    parsed_items[item_id] = {"display_name": display_name}
 
-# find and parse item details
-# isolates the div housing the table
-query_divs = driver.find_elements_by_id("ajax")
-i_tables = query_divs[0].find_elements_by_tag_name("tbody")
+    item_entry = {
+        "item_id": item_id,
+        "display_name": display_name
+    }
 
-# for i_table in i_tables:
-for tbody in i_tables:
-    col_headers = tbody.find_elements_by_tag_name("th")
-    col_value = tbody.find_elements_by_tag_name("td")
+    # parses item details like descriptions and item types
+    col_headers = i_tables[i].find_elements_by_tag_name("th")
+    col_values = i_tables[i].find_elements_by_tag_name("td")
+    for j in range(1, len(col_headers)):
+        item_entry[col_headers[j].text] = col_values[j].text
+
+    parsed_items.append(item_entry)
 
 # prints the items found and its details
 for item in parsed_items:
-    print(item + "," + str(parsed_items[item]["display_name"]))
+    print(item)
 
 # Closes the browser
 # driver.quit()
