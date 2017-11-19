@@ -13,6 +13,7 @@ from string import ascii_lowercase  # the alphabet a-z
 from selenium import webdriver      # autonomous webpage client
 from selenium.common.exceptions import NoSuchElementException
 from datetime import datetime
+from time import sleep
 
 
 # scrapes a single page from http://www.tamsinwhitfield.co.uk/cp/item_db.php
@@ -31,7 +32,7 @@ def scrape_page(items_list, driver):
     i_tables = query_divs[0].find_elements_by_tag_name("tbody")
 
     # parse item_id and display_name
-    for i in range(1, len(titles)):
+    for i in range(0, len(titles)):
         # loops through each title, skipping the first one.
         id_name = titles[i].text
         print("Found... " + id_name)
@@ -50,11 +51,38 @@ def scrape_page(items_list, driver):
         col_headers = i_tables[i].find_elements_by_tag_name("th")
         col_values = i_tables[i].find_elements_by_tag_name("td")
         for j in range(1, len(col_headers)):
-            item_entry[col_headers[j].text] = col_values[j].text
+            col_name = col_headers[j].text
+            value = col_values[j].text
+
+            # scripts were sanitized, putting curly brace back in
+            if(col_name == "Item Script"):
+                value = "{ " + value + " }"
+
+            item_entry[col_name] = value
 
         parsed_items.append(item_entry)
 
     return parsed_items
+
+
+# scrapes all the pages, then scans for a next button and scrapes the next page
+# until it can no longer find a next button.
+def scrape_all_pages(items_list, driver):
+    items_list = scrape_page(items_list=items_list, driver=driver)
+    print("Page done...")
+    try:
+        # If there is a next button in the pagnation, click it
+        next_button = driver.find_element_by_xpath("//a[text()='Next']")
+        print("Found another page... Going to next page...")
+        next_button.click()
+        # recursion: scrape page
+        print("Waiting for page to load...")
+        sleep(1)
+        items_list = scrape_all_pages(items_list, driver)
+
+    except NoSuchElementException as e:
+        pass
+    return(items_list)
 
 
 # verbose url
@@ -82,8 +110,8 @@ p_type = "6"
 # for c in ascii_lowercase:
     # ''' scrapes all items a-z pages '''
     # print(c)
-p_letter = 'z'
-target_url = base_url + "?letter=" + p_letter + "&type=" + p_type + "&limit=99&start=0"
+p_letter = 'a'
+target_url = base_url + "?letter=" + p_letter + "&type=" + p_type + "&limit=25&start=0"
 
 # turn on the web client, must be downloaded from:
 # https://sites.google.com/a/chromium.org/chromedriver/downloads
@@ -96,17 +124,17 @@ browser.get(target_url)
 
 parsed_items = []
 
-items_list = scrape_page(items_list=parsed_items, driver=browser)
+parsed_items = scrape_all_pages(items_list=parsed_items, driver=browser)
 
 # Gets current time now as a string
-scrape_time = datetime.now().strftime("%Y%m%d%H%M")
+scrape_time = datetime.now().strftime("%Y%m%d%H%M%S")
 
 # prints the items found and its details
 all_headers = []
 
 # creates a list of all possible headers by going through
 # and recording all items and all their dictionary keys
-for item in items_list:
+for item in parsed_items:
     for key in item:
         if key not in all_headers:
             all_headers.append(key)
@@ -119,7 +147,7 @@ header = "\t".join(all_headers) + "\n"
 f.write(header)
 
 # writes each item into a row in the tsv
-for item in items_list:
+for item in parsed_items:
     entry = ""
     for header in all_headers:
         try:
@@ -132,19 +160,11 @@ for item in items_list:
     last_tab = entry.rfind("\t")
     entry = entry[:last_tab]
     entry += "\n"
+    entry = entry.replace("�", "-")
     f.write(entry)
 
 # closes the file
 f.close()
 
 # closes the browser
-browser.quit()
-
-# try:
-#   # If there is a next button in the pagnation, click it
-#   next_button = driver.find_element_by_xpath("//a[text()='Next']")
-#   next_button.click()
-
-#   # recursion: scrape page
-# except NoSuchElementException as e:
-#   pass
+# browser.quit()
