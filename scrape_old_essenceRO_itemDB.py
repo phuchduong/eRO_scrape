@@ -11,7 +11,7 @@
 '''
 from string import ascii_lowercase  # the alphabet a-z
 from selenium import webdriver      # autonomous webpage client
-from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import NoSuchElementException, StaleElementReferenceException
 from datetime import datetime
 from time import sleep
 
@@ -77,9 +77,11 @@ def scrape_all_pages(items_list, driver):
         next_button.click()
         # recursion: scrape page
         print("Waiting for page to load...")
-        sleep(1)
-        items_list = scrape_all_pages(items_list, driver)
-
+        sleep(2)
+        try:
+            items_list = scrape_all_pages(items_list, driver)
+        except StaleElementReferenceException as e:
+            items_list = scrape_all_pages(items_list, driver)
     except NoSuchElementException as e:
         pass
     return(items_list)
@@ -104,14 +106,8 @@ base_url = "http://www.tamsinwhitfield.co.uk/cp/item_db.php"
 # 10 = Ammunition
 # 11 = Usable Item (delayed)
 # 12 = Special
-p_type = "6"
+p_type = "-1"
 
-# url param: letter
-# for c in ascii_lowercase:
-    # ''' scrapes all items a-z pages '''
-    # print(c)
-p_letter = 'a'
-target_url = base_url + "?letter=" + p_letter + "&type=" + p_type + "&limit=25&start=0"
 
 # turn on the web client, must be downloaded from:
 # https://sites.google.com/a/chromium.org/chromedriver/downloads
@@ -119,12 +115,22 @@ target_url = base_url + "?letter=" + p_letter + "&type=" + p_type + "&limit=25&s
 chrome_driver_path = "chromedriver.exe"
 browser = webdriver.Chrome(executable_path=chrome_driver_path)
 
-# tells the bot browser to the url
-browser.get(target_url)
-
+# holds all the items found and parsed
 parsed_items = []
 
-parsed_items = scrape_all_pages(items_list=parsed_items, driver=browser)
+# url param: letter
+for c in ascii_lowercase:
+    ''' scrapes all items a-z pages '''
+    p_letter = c
+    target_url = base_url + "?letter=" + p_letter + "&type=" + p_type + "&limit=25&start=0"
+
+    # tells the bot browser to the url
+    browser.get(target_url)
+
+    parsed_items = scrape_all_pages(items_list=parsed_items, driver=browser)
+
+# closes the browser
+browser.quit()
 
 # Gets current time now as a string
 scrape_time = datetime.now().strftime("%Y%m%d%H%M%S")
@@ -165,6 +171,3 @@ for item in parsed_items:
 
 # closes the file
 f.close()
-
-# closes the browser
-# browser.quit()
