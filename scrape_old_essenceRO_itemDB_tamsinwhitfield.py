@@ -1,6 +1,6 @@
 #!/usr/bin/env python.
 '''
-    File name: scrape_old_essenceRO_itemDB.py
+    File name: scrape_old_essenceRO_itemDB_tamsinwhitfield.py
     Date created: November 17, 2017
     Python version: 3.6.1
     Purpose: to recreate the item_db.txt table from essenceRO.
@@ -9,7 +9,7 @@
     Website: phuchduong.io
     Linkedin: https://www.linkedin.com/in/phuchduong/
 '''
-from string import ascii_lowercase  # the alphabet a-z
+# from string import ascii_lowercase  # the alphabet a-z
 from selenium import webdriver      # autonomous webpage client
 from selenium.common.exceptions import NoSuchElementException, StaleElementReferenceException
 from datetime import datetime
