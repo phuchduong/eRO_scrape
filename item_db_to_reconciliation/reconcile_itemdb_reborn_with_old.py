@@ -10,10 +10,10 @@
     Linkedin: https://www.linkedin.com/in/phuchduong/
 '''
 # TSV file old old eRO, webscraped
-oldero_item_db_path = "D:/repos/essencero_restoration/web_scrape_web_archive/item_db_web_archive.tsv"
+oldero_item_db_path = "C:/repos/essencero_restoration/web_scrape_web_archive/item_db_web_archive.tsv"
 
 # essenceRO reborn item_db
-reborn_item_db_path = "D:/repos/eRODev/rAthena Files/db/import/ero_item_db/item_db.txt"
+reborn_item_db_path = "C:/repos/eRODev/rAthena Files/db/import/ero_item_db/item_db.txt"
 
 # populates old database from old item_db
 # old_db = {}
