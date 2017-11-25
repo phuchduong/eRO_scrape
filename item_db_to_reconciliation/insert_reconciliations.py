@@ -35,7 +35,6 @@ for cell in column:
     except IndexError:
         pass
 
-
 old_filename = "item_db.txt"
 old_path = out_path + "/" + old_filename
 print("Opening: " + old_path)
@@ -48,7 +47,7 @@ new_f = open(file=new_path, mode="w+")
 
 for line in old_f:
     line_split = line.split(",")
-    if(len(line_split) == 22):
+    if(len(line_split) >= 22):
         item_id = line_split[0]
         if(item_id[:2] != "//" and item_id in new_entry):
             entry = new_entry.pop(item_id)
@@ -66,4 +65,11 @@ for line in old_f:
         # If the line is not referenced in the file, write it.
         new_f.write(line)
 
+
+left_overs = []
+for item in new_entry:
+    left_overs.append(item)
+
+print("Could not find the following items: ")
+print(",".join(left_overs))
 # prints all 
