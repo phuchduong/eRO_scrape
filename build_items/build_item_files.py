@@ -73,8 +73,6 @@ old_ero_ignore_list = [
     20502,  # Drooping Yosh
     20581,  # Drooping Zhao
 ]
-old_ero_itemid_list = []
-old_ero_item_dict = {}
 
 # Read in tamsinwhitfield as a dictionary by item_id as the key, remaining line as values
 tw_dict = {}
@@ -84,6 +82,11 @@ with open(file=repo_dir + tw_dir, mode="r") as tw:
         item_id = line.split("\t")[0]
         item_body = line[len(item_id) + 1:]  # grabs everything after the item_id
         tw_dict[item_id] = item_body
+tw_keys = sorted([int(x) for x in tw_dict.keys()])  # converts keys to int
+tw_keys = [x for x in tw_keys if x not in old_ero_ignore_list]  # Remove ignore list
+
+# for key in tw_keys:
+#     print(key)
 
 # Read in web archive as a dictionary by item_id as the key, remaining line as values
 wa_dict = {}
@@ -94,15 +97,18 @@ with open(file=repo_dir + wa_dir, mode="r") as wa:
         item_id = line.split("\t")[0]
         item_body = line[len(item_id) + 1:]  # grabs everything after the item_id
         wa_dict[item_id] = item_body
+wa_keys = sorted([int(x) for x in wa_dict.keys()])  # converts keys to int
+wa_keys = [x for x in wa_keys if x not in old_ero_ignore_list]  # Remove ignore list
 
 # Combine tamsinwhitfield and web archive lists, filtering ignored items
 
-# build a master key list of item ids in both lists, and remove the ignore list
+# build a master key list of item ids in both lists
 both_exists = set(tw_dict.keys()).intersection(wa_dict.keys())  # finds items that exist in both lists
 both_exists = [int(x) for x in both_exists]  # converts all elements to integer from string
-both_exists = [x for x in both_exists not in old_ero_ignore_list]  # filters items in ignore list
 both_exists = sorted(both_exists)  # sorts keys
-for item in both_exists:
-    print(item)
-tw_exclusive = []
-wa_exclusive = []
+
+# tw_exclusive = [x for x in tw_dict.keys() not in both_exists]  # items that only appear in tw
+# wa_exclusive = [x for x in wa_dict.keys() not in both_exists]  # items that only appear in wa
+
+# for item in tw_dict.keys():
+#     print(item)
