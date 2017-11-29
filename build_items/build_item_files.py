@@ -75,18 +75,35 @@ def main():
         20581,  # Drooping Zhao
     ]
 
+    ######################
+    # tamsinwhitfield db #
+    ######################
     # Read in tamsinwhitfield as a dictionary by item_id as the key, remaining line as values
     # Ignores any item in the ignore list.
     with open(file=repo_dir + tw_dir, mode="r") as tw:
         print("Opening... " + repo_dir + tw_dir)
         tw_header = tw.readline()  # header
-        tw_dict = parse_item_scrape_tsv(file_reader=tw, skip_header=True, ignore_list=old_ero_ignore_list)
+        tw_dict = parse_item_scrape_tsv(file_reader=tw, ignore_list=old_ero_ignore_list)
 
+    ##################
+    # web archive db #
+    ##################
     # Read in webarchive as a dictionary by item_id as the key, remaining line as values
     # Ignores any item in the ignore list.
-    with open(file=repo_dir + wa_dir, mode="r") as wa:
-        wa_header = tw.readline()  # header
-        wa_dict = parse_item_scrape_tsv(file_reader=wa, skip_header=True, ignore_list=old_ero_ignore_list)
+    # with open(file=repo_dir + wa_dir, mode="r") as wa:
+    #     wa_header = tw.readline()  # header
+    #     wa_dict = parse_item_scrape_tsv(file_reader=wa, ignore_list=old_ero_ignore_list)
+
+    # finds item_ids that exist in both lists
+    item_id_both_exists = set(tw_dict.keys()).intersection(wa_dict.keys())
+    item_id_both_exists = sorted(item_id_both_exists)
+
+    # finds item_ids that only exists exclusively in tamsinwhitfield_db (tw_dict)
+    tw_exclusive = [x for x in tw_exclusive.keys() if not in wa_dict.keys()]
+
+    # finds item_ids that only exists exclusively in web_archive_db (wa_dict)
+    wa_exclusive = [x for x in wa_exclusive.keys() if not in tw_dict.keys()]
+
 
     print(str(tw_dict))
 
@@ -98,11 +115,9 @@ def main():
 # {
 #   "a": "b\tc\td\te\t\n"   
 # }
-def parse_item_scrape_tsv(file_reader, skip_header, ignore_list):
+# Takes in a list of keys to ignore and skip
+def parse_item_scrape_tsv(file_reader, ignore_list):
     tsv_dict = {}
-    # if skip_header:
-    #     # Skips header
-    #     file_reader.next()
     for line in file_reader:  # body
         item_id = int(line.split("\t")[0])
         if item_id not in ignore_list:
@@ -111,23 +126,7 @@ def parse_item_scrape_tsv(file_reader, skip_header, ignore_list):
             tsv_dict[item_id] = item_body
     return tsv_dict
 
-# Takes in a list of ids
-#   - converts them to integers
-#   - sorts them
-def cleanse_item_id_keys(item_ids):
-    item_ids = [int(x) for x in item_ids]
-    item_ids = sorted(item_ids)
-
 def refractor_this():
-    # Read in web archive as a dictionary by item_id as the key, remaining line as values
-    wa_dict = {}
-    print(repo_dir + wa_dir)
-    with open(file=repo_dir + wa_dir, mode="r") as wa:
-        wa_header = wa.readline()
-        for line in wa:            # body
-            item_id = line.split("\t")[0]
-            item_body = line[len(item_id) + 1:]  # grabs everything after the item_id
-            wa_dict[item_id] = item_body
     wa_keys = sorted([int(x) for x in wa_dict.keys()])  # converts keys to int
     wa_keys = [x for x in wa_keys if x not in old_ero_ignore_list]  # Remove ignore list
 
