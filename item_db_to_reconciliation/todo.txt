@@ -1,0 +1,25 @@
+Guillotine
+Phen Card
+Roboglasses slot and non slot
+Dragon Wing ears vs dragon wings
+vide hats
+item_db inserts
+fix aquaring hat
+cookie ring
+day ring
+Marin_Ring
+Night_Ring
+turn unknown drop sprites into apples
+validate item sprites
+strong shield
+rough wind hairpin
+elemental wings
+
+ASPD Valkyrie Helm [1] 20305
+ATK Valkyrie Helm [1] 20300
+DEX Valkyrie Helm [1] 20302
+HP Valkyrie Helm [1] 20301
+INT Valkyrie Helm [1] 20307
+MDEF Valkyrie Helm [1] 20303
+MVP Valkyrie Helm [1] 20304
+Percent ASPD Valkyrie Helm [1] 20306

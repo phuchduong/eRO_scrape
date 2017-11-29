@@ -43,7 +43,7 @@ wa_dir = "/web_scrape_web_archive/item_db_web_archive.tsv"
 
 # List of item ids of items that are being left behind and not integrated into the new server.
 # Treatment: These item should be skipped during the merge.
-old_aero_ignore_list = [
+old_ero_ignore_list = [
     20631,  # Drooping Aria
     20522,  # Drooping Aria Stark
     20524,  # Drooping Biomaster
@@ -73,3 +73,36 @@ old_aero_ignore_list = [
     20502,  # Drooping Yosh
     20581,  # Drooping Zhao
 ]
+old_ero_itemid_list = []
+old_ero_item_dict = {}
+
+# Read in tamsinwhitfield as a dictionary by item_id as the key, remaining line as values
+tw_dict = {}
+with open(file=repo_dir + tw_dir, mode="r") as tw:
+    tw_header = tw.readline()  # header
+    for line in tw:            # body
+        item_id = line.split("\t")[0]
+        item_body = line[len(item_id) + 1:]  # grabs everything after the item_id
+        tw_dict[item_id] = item_body
+
+# Read in web archive as a dictionary by item_id as the key, remaining line as values
+wa_dict = {}
+print(repo_dir + wa_dir)
+with open(file=repo_dir + wa_dir, mode="r") as wa:
+    wa_header = wa.readline()
+    for line in wa:            # body
+        item_id = line.split("\t")[0]
+        item_body = line[len(item_id) + 1:]  # grabs everything after the item_id
+        wa_dict[item_id] = item_body
+
+# Combine tamsinwhitfield and web archive lists, filtering ignored items
+
+# build a master key list of item ids in both lists, and remove the ignore list
+both_exists = set(tw_dict.keys()).intersection(wa_dict.keys())  # finds items that exist in both lists
+both_exists = [int(x) for x in both_exists]  # converts all elements to integer from string
+both_exists = [x for x in both_exists not in old_ero_ignore_list]  # filters items in ignore list
+both_exists = sorted(both_exists)  # sorts keys
+for item in both_exists:
+    print(item)
+tw_exclusive = []
+wa_exclusive = []
