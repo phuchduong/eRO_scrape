@@ -27,23 +27,23 @@ def main():
     # your repo directory should look like this
     #
     # /repo root (essencero_restoration)
-    #   /web_scrape_tamsinwhitfield
+    #   \web_scrape_tamsinwhitfield
     #       /old_essence_item_db.txt
-    #   /web_scrape_web_archive
+    #   \web_scrape_web_archive
     #       /item_db_web_archive.tsv
     repo_dir = "C:/repos/essencero_restoration"  # change this to your own
 
     # data webscraped from tamsinwhitfield
-    tw_dir = "/web_scrape_tamsinwhitfield/old_essence_item_db.txt"  # tab deliminated
+    tw_dir = "\web_scrape_tamsinwhitfield/old_essence_item_db.txt"  # tab deliminated
 
     # data webscraped from web archive (the way back machine)
-    wa_dir = "/web_scrape_web_archive/item_db_web_archive.tsv"
+    wa_dir = "\web_scrape_web_archive/item_db_web_archive.tsv"
 
     # new iteminfo
-    new_iteminfo_dir = "C:/repos/eRODev/eRO Client Data/data/luafiles514/lua files/datainfo/pre_re_itemInfo.lua"
+    new_iteminfo_dir = "C:/repos/eRODev/eRO Client Data\data/luafiles514/lua files\datainfo/pre_re_itemInfo.lua"
 
     # old iteminfo
-    old_iteminfo_dir = "C:/repos/eRODev/eRO Client Data/System/itemInfosryx.lub"
+    old_iteminfo_dir = "C:/repos/eRODev/eRO Client Data\system/itemInfosryx.lub"
 
     ##################
     # old eRO fields #
@@ -127,72 +127,31 @@ def main():
             # Item does not exist in wa_item_db
             pass
 
+    # for a list of valid codecs:
+    #     essencero_restoration\Lua Codecs.xlsx
+    encoding = "437"
+        # 437 is english codec
+
     # parses ero iteminfo lua file into a python dictionary
-    old_item_info_lua_renewal = "C:/repos/eRODev/eRO Client Data/System/itemInfosryx.lub"
-    
-    encoding_list = [
-        "437",
-        "850",
-        "852",
-        "855",
-        "860",
-        "861",
-        "862",
-        "863",
-        "865",
-        "866",
-        "csptcp154",
-        "EBCDIC-CP-BE",
-        "gb18030-2000",
-        "IBM037",
-        "ibm1026",
-        "ibm1140",
-        "IBM775",
-        "iso-8859-1",
-        "iso-8859-10",
-        "iso-8859-13",
-        "iso-8859-14",
-        "iso-8859-15",
-        "iso-8859-2",
-        "iso-8859-4",
-        "iso-8859-5",
-        "iso-8859-9",
-        "maccyrillic",
-        "macgreek",
-        "maciceland",
-        "maclatin2",
-        "macroman",
-        "macturkish",
-    ]
-    successful = []
+    old_item_info_lua_renewal = "C:/repos/eRODev/eRO Client Data\system/itemInfosryx.lub"
+    old_ero_lua = parse_item_info_lua(file_dir=old_item_info_lua_renewal, encoding=encoding)
 
     # parses pre-renewal iteminfo lua file into a python dictionary
-    old_item_info_lua_prerenewal = "C:/repos/eRODev/eRO Client Data/data/luafiles514/lua files/datainfo/pre_re_itemInfo.lua"
-    for encoding in encoding_list:
-        try:
-            ero_lua = parse_item_info_lua(file_dir=old_item_info_lua_renewal, encoding=encoding)
-            # prerenewal_lua = parse_item_info_lua(file_dir=old_item_info_lua_prerenewal, encoding=encoding)
-            new_item_info_lua = "C:/repos/eRODev/eRO Client Data/System/new_itemInfosryx.lub"
-            write_item_info_lua_to_file(file_dir=new_item_info_lua, lua_parts=ero_lua, encoding=encoding)
+    old_item_info_lua_prerenewal = "C:/repos/eRODev/eRO Client Data\data/luafiles514/lua files\datainfo/pre_re_itemInfo.lua"
+    prerenewal_lua = parse_item_info_lua(file_dir=old_item_info_lua_prerenewal, encoding=encoding)
 
-            print("Encoding successful: " + encoding)
-            successful.append(encoding)
-        except UnicodeDecodeError:
-            print("Encoding error:      " + encoding)
-
-    print(",".join(successful))
     # Writes new lua to file
+    new_item_info_lua = "C:/repos/eRODev/eRO Client Data/system/new_itemInfosryx.lub"
+    write_item_info_lua_to_file(file_dir=new_item_info_lua, lua_parts=old_ero_lua, encoding=encoding)
     
-    # write_item_info_lua_to_file(file_dir=new_item_info_lua, lua_parts=renewal_lua, encoding=True)
-
 
 # Parses a TSV and returns a dictionary.
 # Grabs the first item in the TSV on each line as the key, converts
 #   key to integer.
 # The remaining line becomes the value of the key.
-# Ex. "a/tb/tc/td/te/t/n" input would return
+# Ex. "a/tb/tc/td/te/t\n" input would return
 # {
-#   "a": "b/tc/td/te/t/n"
+#   "a": "b/tc/td/te/t\n"
 # }
 # Takes in a list of keys to ignore and skip
 def parse_item_scrape_tsv(file_reader, ignore_list):
@@ -220,33 +179,33 @@ def parse_item_info_lua(file_dir, encoding):
     # Patterns #
     ############
     # Begin item match
-    new_item_line_pattern = "^/s{4,}/[/d{3,5}/]/s{1,}?=/s{1,}?{$/n"
+    new_item_line_pattern = "^\s{4,}\[\d{3,5}]\s{1,}?=\s{1,}?{$\n"
     is_new_item_line = re.compile(new_item_line_pattern)
 
     # 3~5 digit item code
-    item_code_pattern = "/d{3,5}"
+    item_code_pattern = "\d{3,5}"
     extract_item_code = re.compile(item_code_pattern)
 
     # line that contains key value pairs
-    key_value_line_pattern = '^/s{4,}/w{1,}/s{1,}?=/s{1,}?((".{0,}"|/d{1,})|{.{0,}}),?$/n'
+    key_value_line_pattern = '^\s{4,}\w{1,}\s{1,}?=\s{1,}?((".{0,}"|\d{1,})|{.{0,}}),?$\n'
     is_key_value_line = re.compile(key_value_line_pattern)
 
     # line that starts a multi line embedded object in the lua object
-    multi_line_embed_key_pattern = '^/s{4,}/w{1,}/s{1,}?=/s{1,}?{$/n'
+    multi_line_embed_key_pattern = '^\s{4,}\w{1,}\s{1,}?=\s{1,}?{$\n'
     is_multi_line_embed_key = re.compile(multi_line_embed_key_pattern)
 
     # line that has the values of a multi line embedded object
-    multi_line_embed_value_pattern = '^/s{4,}".{0,}",?$/n'
+    multi_line_embed_value_pattern = '^\s{4,}(-- )?(\s{1,})?(\w{1,})?(\s{1,})?".{0,}",?$\n'
     is_multi_line_embed_value = re.compile(multi_line_embed_value_pattern)
 
-    # marks the end of the data structure of the file
-    end_of_data_pattern = "^function /w{0,}/(/)$/n"
+    # marks the end of the data structure of the file by finding the main function
+    end_of_data_pattern = "^function\s{1,}main\(.{0,}\)$\n|^main\s{0,}=\s{0,}function\(.{0,}\)$\n"
     is_end_of_data = re.compile(end_of_data_pattern)
 
     # return objects
     lua_beg = ""
     lua_dict = {}
-    lua_end = "/n"
+    lua_end = "\n"
 
     # loop state objects
     current_item_id = -1
@@ -271,10 +230,10 @@ def parse_item_info_lua(file_dir, encoding):
                 key_value_list = line.split("=")
 
                 # key
-                key = key_value_list[0].strip().replace("/n", "")
+                key = key_value_list[0].strip().replace("\n", "")
 
                 # value
-                value = key_value_list[1].strip().replace("/n", "")  # removes trialing comma
+                value = key_value_list[1].strip().replace("\n", "")  # removes trialing comma
                 if value[-1:] == ",":
                     # if there is a trailing comma, remove it
                     value = value[:-1]
@@ -298,6 +257,11 @@ def parse_item_info_lua(file_dir, encoding):
                 lua_end += line
             elif stage_of_file == "end":
                 lua_end += line
+            else:
+                ignored_data = line.strip()
+                if ignored_data != "":
+                    if ignored_data[0] != "}":
+                        print("Skipping line: " + str(counter) + ": " + line)
             counter += 1
 
     print("Parsed " + str(counter) + " lines from Lua.")
@@ -336,20 +300,20 @@ def write_item_info_lua_to_file(file_dir, lua_parts, encoding):
     f.write(lua_beg)  # first line
 
     for item_id in lua_dict:
-        f.write(tab + "[" + str(item_id) + "] = {/n")
+        f.write(tab + "[" + str(item_id) + "] = {\n")
         for item_key in lua_dict[item_id]:
             if isinstance(lua_dict[item_id][item_key], list):
 
-                multi_line_embed_str = tab * 2 + item_key + " = {/n"
+                multi_line_embed_str = tab * 2 + item_key + " = {\n"
 
                 for item in lua_dict[item_id][item_key]:
-                    multi_line_embed_str += tab * 3 + item + ",/n"
-                multi_line_embed_str += tab * 2 + "},/n"
+                    multi_line_embed_str += tab * 3 + item + ",\n"
+                multi_line_embed_str += tab * 2 + "},\n"
                 f.write(multi_line_embed_str)
             else:
-                f.write(tab * 2 + str(item_key) + " = " + str(lua_dict[item_id][item_key]) + ",/n")
-        f.write(tab + "},/n")
-    f.write("}/n")
+                f.write(tab * 2 + str(item_key) + " = " + str(lua_dict[item_id][item_key]) + ",\n")
+        f.write(tab + "},\n")
+    f.write("}\n")
     f.write(lua_end)
     print("Writing " + str(len(lua_dict)) + " items to... " + file_dir)
     f.close()
