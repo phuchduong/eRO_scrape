@@ -16,6 +16,7 @@
     Website: phuchduong.io
     Linkedin: https://www.linkedin.com/in/phuchduong/
 '''
+import re  # regular expression
 
 
 def main():
@@ -37,6 +38,12 @@ def main():
 
     # data webscraped from web archive (the way back machine)
     wa_dir = "/web_scrape_web_archive/item_db_web_archive.tsv"
+
+    # new iteminfo
+    new_iteminfo_dir = "D:/repos/eRODev/eRO Client Data/data/luafiles514/lua files/datainfo/pre_re_itemInfo.lua"
+
+    # old iteminfo
+    old_iteminfo_dir = "D:/repos/eRODev/eRO Client Data/System/itemInfosryx.lub"
 
     ##################
     # old eRO fields #
@@ -111,34 +118,104 @@ def main():
             tw_item = tw_dict[item_id]
         else:
             # Item does not exist in tw_item_db
-            print()
+            pass
 
         # parse wa items
         if item_id in wa_dict:
             wa_item = wa_dict[item_id]
         else:
             # Item does not exist in wa_item_db
-            print()
+            pass
 
-    # # finds item_ids that exist in both lists
-    # item_id_both_exists = set(tw_dict.keys()).intersection(wa_dict.keys())
-    # item_id_both_exists = sorted(item_id_both_exists)
-    # print("Fusing item lists... " + )
+    ############
+    # Patterns #
+    ############
+    # Begin item match
+    new_item_line_pattern = "^\s{4,}\[\d{3,5}\]\s{1,}?=\s{1,}?{$\n"
+    is_new_item_line = re.compile(new_item_line_pattern)
 
-    # # finds item_ids that only exists exclusively in tamsinwhitfield_db (tw_dict)
-    # tw_exclusive = [x for x in tw_dict.keys() if x not in wa_dict.keys()]
+    # 3~5 digit item code
+    item_code_pattern = "\d{3,5}"
+    extract_item_code = re.compile(item_code_pattern)
 
-    # # finds item_ids that only exists exclusively in web_archive_db (wa_dict)
-    # wa_exclusive = [x for x in wa_dict.keys() if x not in tw_dict.keys()]
+    key_value_line_pattern = '^\s{4,}\w{1,}\s{1,}?=\s{1,}?((".{0,}"|\d{1,})|{.{0,}}),?$\n'
+    is_key_value_line = re.compile(key_value_line_pattern)
 
+    multi_line_embed_key_pattern = '^\s{4,}\w{1,}\s{1,}?=\s{1,}?{$\n'
+    is_multi_line_embed_key = re.compile(multi_line_embed_key_pattern)
+
+    multi_line_embed_value_pattern ='^\s{4,}".{0,}",?$\n'
+    is_multi_line_embed_value = re.compile(multi_line_embed_value_pattern)
+
+    nid_beg = ""
+    nid_dict = {}
+    nid_end = ""
+    current_item_id = -1
+    current_embed_key = ""
+    # read in new iteminfo
+    with open(file=old_iteminfo_dir, mode="r", encoding="ms949") as nid:
+        print("Opening... " + new_iteminfo_dir)
+        counter = 0
+        for line in nid:
+            if is_new_item_line.match(line):
+                # if item code is found,
+                # extract item code
+                current_item_id = re.search(pattern=extract_item_code, string=line).group(0)
+                if current_item_id not in nid_dict:
+                    nid_dict[current_item_id] = {}
+                    # make a new dictionary reference
+            elif is_key_value_line.match(line):
+                # if this is a key_value_pair line
+                # add that key and value to the current item
+                key_value_list = line.split("=")
+
+                # key
+                key = key_value_list[0].strip().replace("\n", "")
+
+                # value
+                value = key_value_list[1].strip().replace("\n", "")  # removes trialing comma
+                if value[-1:] == ",":
+                    # if there is a trailing comma, remove it
+                    value[:-1]
+
+                # adds key and value to the current item dict
+                nid_dict[current_item_id][key] = value
+            elif is_multi_line_embed_key.match(line):
+                # if it's the start of a multi line embed, create an embedded dictionary with a list
+                # as it's value
+                current_embed_key = line.split("=")[0].strip()
+                nid_dict[current_item_id][current_embed_key] = []
+            elif is_multi_line_embed_value.match(line):
+                value = line.strip()
+                if value[-1:] == ",":
+                    value[:-1]
+                nid_dict[current_item_id][current_embed_key].append(value)
+            counter += 1
+        print("Lines found: " + str(counter))
+
+    iteminfo_dir = "D:/repos/eRODev/eRO Client Data/System/itemInfosryx.lub"
+    beg_item_number_line = "\t["
+    end_item_number_line = "] = {\n"
+    print(beg_item_number_line + str(key) + end_item_number_line)
+    print(nid_dict[key])
+    # for x in nid_dict[key]:
+        # print(print("\t" * 2 + x + " = " + nid_dict[key][x]) + ",\n")
+    # read in old iteminfo
+    # Using Windows-949 encoding (korean)
+    with open(file=old_iteminfo_dir, mode="r", encoding="ms949") as oid:
+        print("Opening... " + old_iteminfo_dir)
+        counter = 0
+        for line in oid:
+            counter += 1
+        print("Lines found: " + str(counter))
 
 # Parses a TSV and returns a dictionary.
 # Grabs the first item in the TSV on each line as the key, converts
 #   key to integer.
 # The remaining line becomes the value of the key.
-# Ex. "a\tb\tc\td\te\t\n" input would return
+# Ex. "a/tb/tc/td/te/t/n" input would return
 # {
-#   "a": "b\tc\td\te\t\n"   
+#   "a": "b/tc/td/te/t/n"
 # }
 # Takes in a list of keys to ignore and skip
 def parse_item_scrape_tsv(file_reader, ignore_list):
@@ -151,21 +228,6 @@ def parse_item_scrape_tsv(file_reader, ignore_list):
             tsv_dict[item_id] = item_body
     return tsv_dict
 
-def refractor_this():
-    wa_keys = sorted([int(x) for x in wa_dict.keys()])  # converts keys to int
-    wa_keys = [x for x in wa_keys if x not in old_ero_ignore_list]  # Remove ignore list
-
-    # Combine tamsinwhitfield and web archive lists, filtering ignored items
-
-    # build a master key list of item ids in both lists
-    both_exists = set(tw_dict.keys()).intersection(wa_dict.keys())  # finds items that exist in both lists
-    both_exists = [int(x) for x in both_exists]  # converts all elements to integer from string
-    both_exists = sorted(both_exists)  # sorts keys
-
-    # tw_exclusive = [x for x in tw_dict.keys() not in both_exists]  # items that only appear in tw
-    # wa_exclusive = [x for x in wa_dict.keys() not in both_exists]  # items that only appear in wa
-
-    # for item in tw_dict.keys():
-    #     print(item)
 
 main()
+
