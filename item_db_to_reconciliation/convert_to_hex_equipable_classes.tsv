@@ -1,0 +1,119 @@
+All Jobs
+Blacksmith
+Knight / Crusader
+All Jobs Except Novice
+Priest / Sage / Star Gladiator
+Novice
+Gunslinger
+Archer / Thief / Hunter / Rogue / Bard/Dancer
+Mage / Acolyte / Priest / Wizard / Monk / Sage / Soul Linker
+Ninja
+Archer / Thief / Hunter / Assassin / Rogue / Bard/Dancer
+Assassin
+Priest / Assassin
+Thief / Assassin / Rogue / Ninja
+Swordman / Merchant / Knight / Blacksmith / Crusader / Alchemist / Taekwon / Star Gladiator
+Novice / Swordman / Mage / Archer / Merchant / Thief / Knight / Wizard / Blacksmith / Hunter / Assassin / Unused / Crusader / Monk / Sage / Rogue / Alchemist / Unused / Taekwon / Star Gladiator / Soul Linker / Gunslinger / Ninja
+Novice / Swordman / Merchant / Thief / Knight / Blacksmith / Assassin / Crusader / Rogue / Alchemist
+Swordman / Merchant / Thief / Knight / Blacksmith / Assassin / Crusader / Rogue / Alchemist
+Bard/Dancer
+Swordman / Merchant / Knight / Blacksmith / Crusader / Alchemist
+Swordman / Merchant / Thief / Knight / Blacksmith / Assassin / Crusader / Rogue / Alchemist / Taekwon / Star Gladiator / Ninja
+Swordman / Knight / Crusader
+Swordman / Mage / Archer / Merchant / Thief / Knight / Wizard / Blacksmith / Hunter / Assassin / Crusader / Sage / Rogue / Alchemist / Bard/Dancer / Soul Linker / Ninja
+Swordman / Mage / Merchant / Knight / Wizard / Blacksmith / Crusader / Rogue / Alchemist / Taekwon / Star Gladiator / Soul Linker / Gunslinger
+Novice / Swordman / Mage / Archer / Merchant / Thief / Knight / Wizard / Blacksmith / Hunter / Assassin / Crusader / Sage / Rogue / Alchemist / Bard/Dancer / Soul Linker / Ninja
+Novice / Swordman / Archer / Merchant / Thief / Knight / Blacksmith / Hunter / Assassin / Unused / Crusader / Rogue / Alchemist / Bard/Dancer / Unused / Soul Linker / Ninja
+Priest / Monk
+Novice / Swordman / Acolyte / Merchant / Knight / Priest / Blacksmith / Crusader / Monk / Alchemist
+Archer / Hunter / Bard/Dancer
+Acolyte / Priest / Monk
+Swordman / Archer / Merchant / Thief / Knight / Blacksmith / Hunter / Assassin / Crusader / Rogue / Alchemist / Bard/Dancer / Taekwon / Star Gladiator / Gunslinger
+Mage
+Swordman / Acolyte / Merchant / Thief / Knight / Priest / Blacksmith / Assassin / Crusader / Monk / Rogue / Alchemist / Bard/Dancer
+Archer / Hunter / Rogue / Bard/Dancer
+Swordman / Archer / Merchant / Thief / Knight / Blacksmith / Hunter / Assassin / Crusader / Rogue / Alchemist / Bard/Dancer
+Swordman / Acolyte / Merchant / Knight / Priest / Blacksmith / Crusader / Monk / Alchemist
+Mage / Wizard / Sage / Soul Linker
+Merchant / Blacksmith / Alchemist
+Mage / Archer / Acolyte / Priest / Wizard / Hunter / Monk / Sage / Bard/Dancer / Soul Linker
+Crusader
+Novice / Swordman / Mage / Archer / Merchant / Thief / Knight / Wizard / Blacksmith / Hunter / Assassin / Unused / Crusader / Sage / Rogue / Alchemist / Bard/Dancer / Unused / Soul Linker / Ninja
+Rogue
+Novice / Mage / Acolyte / Priest / Wizard / Monk / Sage / Soul Linker
+Knight / Priest / Wizard / Blacksmith / Hunter / Assassin / Crusader / Monk / Sage / Rogue / Alchemist / Bard/Dancer
+Novice / Swordman / Mage / Archer / Acolyte / Merchant / Thief
+Novice / Swordman / Mage / Archer / Merchant / Thief / Knight / Wizard / Blacksmith / Hunter / Assassin / Crusader / Sage / Rogue / Alchemist / Bard/Dancer / Soul Linker
+Monk
+Archer / Hunter / Bard/Dancer / Gunslinger
+Mage / Wizard / Sage
+Wizard / Sage / Soul Linker
+Knight / Priest / Wizard / Blacksmith / Hunter / Assassin / Crusader / Monk / Sage / Rogue / Alchemist / Bard/Dancer / Star Gladiator / Soul Linker
+Swordman / Merchant / Thief / Knight / Blacksmith / Assassin / Crusader / Rogue / Alchemist / Taekwon / Star Gladiator
+Swordman / Knight / Crusader / Star Gladiator
+Novice / Swordman / Merchant / Knight / Blacksmith / Assassin / Crusader / Alchemist
+Swordman / Merchant / Thief / Knight / Blacksmith / Assassin / Crusader / Rogue / Alchemist / Star Gladiator
+Knight
+Swordman / Acolyte / Merchant / Thief / Knight / Priest / Blacksmith / Assassin / Crusader / Monk / Rogue / Alchemist / Taekwon / Star Gladiator
+Swordman / Mage / Acolyte / Merchant / Knight / Priest / Wizard / Blacksmith / Crusader / Monk / Sage / Alchemist / Soul Linker
+Novice / Swordman / Merchant / Knight / Blacksmith / Crusader / Alchemist
+Blacksmith / AlchemistAll Jobs	0xffffffff
+Blacksmith	0x00000400
+Knight / Crusader	0x00004080
+All Jobs Except Novice	0xfffffffe
+Priest / Sage / Star Gladiator	0x00410100
+Novice	0x00000001
+Gunslinger	0x01000000
+Archer / Thief / Hunter / Rogue / Bard/Dancer	0x000a0848
+Mage / Acolyte / Priest / Wizard / Monk / Sage / Soul Linker	0x00818314
+Ninja	0x02000000
+Archer / Thief / Hunter / Assassin / Rogue / Bard/Dancer	0x000a1848
+Assassin	0x00001000
+Priest / Assassin	0x00001100
+Thief / Assassin / Rogue / Ninja	0x02021040
+Swordman / Merchant / Knight / Blacksmith / Crusader / Alchemist / Taekwon / Star Gladiator	0x006444a2
+Novice / Swordman / Mage / Archer / Merchant / Thief / Knight / Wizard / Blacksmith / Hunter / Assassin / Unused / Crusader / Monk / Sage / Rogue / Alchemist / Unused / Taekwon / Star Gladiator / Soul Linker / Gunslinger / Ninja	0x0407deef
+Novice / Swordman / Merchant / Thief / Knight / Blacksmith / Assassin / Crusader / Rogue / Alchemist	0x000654e3
+Swordman / Merchant / Thief / Knight / Blacksmith / Assassin / Crusader / Rogue / Alchemist	0x000654e2
+Bard/Dancer	0x00080000
+Swordman / Merchant / Knight / Blacksmith / Crusader / Alchemist	0x000444a2
+Swordman / Merchant / Thief / Knight / Blacksmith / Assassin / Crusader / Rogue / Alchemist / Taekwon / Star Gladiator / Ninja	0x026654e2
+Swordman / Knight / Crusader	0x00004082
+Swordman / Mage / Archer / Merchant / Thief / Knight / Wizard / Blacksmith / Hunter / Assassin / Crusader / Sage / Rogue / Alchemist / Bard/Dancer / Soul Linker / Ninja	0x028f5eee
+Swordman / Mage / Merchant / Knight / Wizard / Blacksmith / Crusader / Rogue / Alchemist / Taekwon / Star Gladiator / Soul Linker / Gunslinger	0x01e646a6
+Novice / Swordman / Mage / Archer / Merchant / Thief / Knight / Wizard / Blacksmith / Hunter / Assassin / Crusader / Sage / Rogue / Alchemist / Bard/Dancer / Soul Linker / Ninja	0x028f5eef
+Novice / Swordman / Archer / Merchant / Thief / Knight / Blacksmith / Hunter / Assassin / Unused / Crusader / Rogue / Alchemist / Bard/Dancer / Unused / Soul Linker / Ninja	0x02ae5ceb
+Priest / Monk	0x00008100
+Novice / Swordman / Acolyte / Merchant / Knight / Priest / Blacksmith / Crusader / Monk / Alchemist	0x0004c5b3
+Archer / Hunter / Bard/Dancer	0x00080808
+Acolyte / Priest / Monk	0x00008110
+Swordman / Archer / Merchant / Thief / Knight / Blacksmith / Hunter / Assassin / Crusader / Rogue / Alchemist / Bard/Dancer / Taekwon / Star Gladiator / Gunslinger	0x016e5cea
+Mage	0x00000004
+Swordman / Acolyte / Merchant / Thief / Knight / Priest / Blacksmith / Assassin / Crusader / Monk / Rogue / Alchemist / Bard/Dancer	0x000ed5f2
+Archer / Hunter / Rogue / Bard/Dancer	0x000a0808
+Swordman / Archer / Merchant / Thief / Knight / Blacksmith / Hunter / Assassin / Crusader / Rogue / Alchemist / Bard/Dancer	0x000e5cea
+Swordman / Acolyte / Merchant / Knight / Priest / Blacksmith / Crusader / Monk / Alchemist	0x0004c5b2
+Mage / Wizard / Sage / Soul Linker	0x00810204
+Merchant / Blacksmith / Alchemist	0x00040420
+Mage / Archer / Acolyte / Priest / Wizard / Hunter / Monk / Sage / Bard/Dancer / Soul Linker	0x00898b1c
+Crusader	0x00004000
+Novice / Swordman / Mage / Archer / Merchant / Thief / Knight / Wizard / Blacksmith / Hunter / Assassin / Unused / Crusader / Sage / Rogue / Alchemist / Bard/Dancer / Unused / Soul Linker / Ninja	0x02af5eef
+Rogue	0x00020000
+Novice / Mage / Acolyte / Priest / Wizard / Monk / Sage / Soul Linker	0x00818315
+Knight / Priest / Wizard / Blacksmith / Hunter / Assassin / Crusader / Monk / Sage / Rogue / Alchemist / Bard/Dancer	0x000fdf80
+Novice / Swordman / Mage / Archer / Acolyte / Merchant / Thief	0x0000007f
+Novice / Swordman / Mage / Archer / Merchant / Thief / Knight / Wizard / Blacksmith / Hunter / Assassin / Crusader / Sage / Rogue / Alchemist / Bard/Dancer / Soul Linker	0x008f5eef
+Monk	0x00008000
+Archer / Hunter / Bard/Dancer / Gunslinger	0x01080808
+Mage / Wizard / Sage	0x00010204
+Wizard / Sage / Soul Linker	0x00810200
+Knight / Priest / Wizard / Blacksmith / Hunter / Assassin / Crusader / Monk / Sage / Rogue / Alchemist / Bard/Dancer / Star Gladiator / Soul Linker	0x00cfdf80
+Swordman / Merchant / Thief / Knight / Blacksmith / Assassin / Crusader / Rogue / Alchemist / Taekwon / Star Gladiator	0x006654e2
+Swordman / Knight / Crusader / Star Gladiator	0x00404082
+Novice / Swordman / Merchant / Knight / Blacksmith / Assassin / Crusader / Alchemist	0x000454a3
+Swordman / Merchant / Thief / Knight / Blacksmith / Assassin / Crusader / Rogue / Alchemist / Star Gladiator	0x004654e2
+Knight	0x00000080
+Swordman / Acolyte / Merchant / Thief / Knight / Priest / Blacksmith / Assassin / Crusader / Monk / Rogue / Alchemist / Taekwon / Star Gladiator	0x0066d5f2
+Swordman / Mage / Acolyte / Merchant / Knight / Priest / Wizard / Blacksmith / Crusader / Monk / Sage / Alchemist / Soul Linker	0x0085c7b6
+Novice / Swordman / Merchant / Knight / Blacksmith / Crusader / Alchemist	0x000444a3
+Blacksmith / Alchemist	0x00040400
