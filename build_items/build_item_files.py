@@ -147,11 +147,15 @@ def main():
     multi_line_embed_value_pattern ='^\s{4,}".{0,}",?$\n'
     is_multi_line_embed_value = re.compile(multi_line_embed_value_pattern)
 
+    end_of_data_pattern = "^function \w{0,}\(\)$\n"
+    is_end_of_data = re.compile(end_of_data_pattern)
+
     nid_beg = ""
     nid_dict = {}
-    nid_end = ""
+    nid_end = "\n"
     current_item_id = -1
     current_embed_key = ""
+    stage_of_file = "beg"
     # read in new iteminfo
     with open(file=old_iteminfo_dir, mode="r", encoding="ms949") as nid:
         print("Opening... " + new_iteminfo_dir)
@@ -164,6 +168,7 @@ def main():
                 if current_item_id not in nid_dict:
                     nid_dict[current_item_id] = {}
                     # make a new dictionary reference
+                stage_of_file = "mid"
             elif is_key_value_line.match(line):
                 # if this is a key_value_pair line
                 # add that key and value to the current item
@@ -176,7 +181,7 @@ def main():
                 value = key_value_list[1].strip().replace("\n", "")  # removes trialing comma
                 if value[-1:] == ",":
                     # if there is a trailing comma, remove it
-                    value[:-1]
+                    value = value[:-1]
 
                 # adds key and value to the current item dict
                 nid_dict[current_item_id][key] = value
@@ -188,18 +193,44 @@ def main():
             elif is_multi_line_embed_value.match(line):
                 value = line.strip()
                 if value[-1:] == ",":
-                    value[:-1]
+                    value = value[:-1]
                 nid_dict[current_item_id][current_embed_key].append(value)
+            elif stage_of_file == "beg":
+                nid_beg += line
+            elif is_end_of_data.match(line):
+                stage_of_file = "end"
+                nid_end += line
+            elif stage_of_file == "end":
+                nid_end += line
             counter += 1
         print("Lines found: " + str(counter))
 
-    iteminfo_dir = "D:/repos/eRODev/eRO Client Data/System/itemInfosryx.lub"
-    beg_item_number_line = "\t["
-    end_item_number_line = "] = {\n"
-    print(beg_item_number_line + str(key) + end_item_number_line)
-    print(nid_dict[key])
+    iteminfo_dir = "D:/repos/eRODev/eRO Client Data/System/new_itemInfosryx.lub"
+    spaces_per_tab = 4
+    tab = " " * spaces_per_tab
+
+    f = open(file=iteminfo_dir, mode="w+", encoding="ms949")
+    f.write("\n" + nid_beg)  # first line
+
+    for item_id in nid_dict:
+        f.write(tab + "[" + str(item_id) + "] = {\n")
+        for item_key in nid_dict[item_id]:
+            if isinstance(nid_dict[item_id][item_key], list):
+
+                multi_line_embed_str = tab * 2 + item_key + " = {\n"
+
+                for item in nid_dict[item_id][item_key]:
+                    multi_line_embed_str += tab * 3 + item + ",\n"
+                multi_line_embed_str += tab * 2 + "},\n"
+                f.write(multi_line_embed_str)
+            else:
+                f.write(tab * 2 + str(item_key) + " = " + str(nid_dict[item_id][item_key]) + ",\n")
+        f.write(tab + "},\n")
+    f.write(nid_end)
+    f.close()
+
     # for x in nid_dict[key]:
-        # print(print("\t" * 2 + x + " = " + nid_dict[key][x]) + ",\n")
+    #     print(print("\t" * 2 + x + " = " + nid_dict[key][x]) + ",\n")
     # read in old iteminfo
     # Using Windows-949 encoding (korean)
     with open(file=old_iteminfo_dir, mode="r", encoding="ms949") as oid:
@@ -230,4 +261,5 @@ def parse_item_scrape_tsv(file_reader, ignore_list):
 
 
 main()
+
 
