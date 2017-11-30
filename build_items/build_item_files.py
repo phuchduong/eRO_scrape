@@ -17,6 +17,7 @@
     Linkedin: https://www.linkedin.com/in/phuchduong/
 '''
 
+
 def main():
     ###############
     # file system #
@@ -29,7 +30,7 @@ def main():
     #       /old_essence_item_db.txt
     #   /web_scrape_web_archive
     #       /item_db_web_archive.tsv
-    repo_dir = "C:/repos/essencero_restoration"  # change this to your own
+    repo_dir = "D:/repos/essencero_restoration"  # change this to your own
 
     # data webscraped from tamsinwhitfield
     tw_dir = "/web_scrape_tamsinwhitfield/old_essence_item_db.txt"  # tab deliminated
@@ -37,11 +38,9 @@ def main():
     # data webscraped from web archive (the way back machine)
     wa_dir = "/web_scrape_web_archive/item_db_web_archive.tsv"
 
-
     ##################
     # old eRO fields #
     ##################
-
     # List of item ids of items that are being left behind and not integrated into the new server.
     # Treatment: These item should be skipped during the merge.
     old_ero_ignore_list = [
@@ -84,28 +83,54 @@ def main():
         print("Opening... " + repo_dir + tw_dir)
         tw_header = tw.readline()  # header
         tw_dict = parse_item_scrape_tsv(file_reader=tw, ignore_list=old_ero_ignore_list)
+        print("Found... " + str(len(tw_dict)) + " items...")
 
     ##################
     # web archive db #
     ##################
     # Read in webarchive as a dictionary by item_id as the key, remaining line as values
     # Ignores any item in the ignore list.
-    # with open(file=repo_dir + wa_dir, mode="r") as wa:
-    #     wa_header = tw.readline()  # header
-    #     wa_dict = parse_item_scrape_tsv(file_reader=wa, ignore_list=old_ero_ignore_list)
+    with open(file=repo_dir + wa_dir, mode="r") as wa:
+        print("Opening... " + repo_dir + wa_dir)
+        wa_header = wa.readline()  # header
+        wa_dict = parse_item_scrape_tsv(file_reader=wa, ignore_list=old_ero_ignore_list)
+        print("Found... " + str(len(wa_dict)) + " items...")
 
-    # finds item_ids that exist in both lists
-    item_id_both_exists = set(tw_dict.keys()).intersection(wa_dict.keys())
-    item_id_both_exists = sorted(item_id_both_exists)
+    ##################################################
+    # Combine both old item db dictionaries together #
+    ##################################################
 
-    # finds item_ids that only exists exclusively in tamsinwhitfield_db (tw_dict)
-    tw_exclusive = [x for x in tw_exclusive.keys() if not in wa_dict.keys()]
+    # Combines both item keys togther into a set that is sorted
+    item_ids_all = list(wa_dict.keys()) + list(tw_dict.keys())  # Adds both item lists together
+    item_ids_all = set(item_ids_all)  # removes duplicate item_ids
+    item_ids_all = sorted(item_ids_all)  # sorts the keys
 
-    # finds item_ids that only exists exclusively in web_archive_db (wa_dict)
-    wa_exclusive = [x for x in wa_exclusive.keys() if not in tw_dict.keys()]
+    for item_id in item_ids_all:
+        # parse tw items
+        if item_id in tw_dict:
+            tw_item = tw_dict[item_id]
+        else:
+            # Item does not exist in tw_item_db
+            print()
 
+        # parse wa items
+        if item_id in wa_dict:
+            wa_item = wa_dict[item_id]
+        else:
+            # Item does not exist in wa_item_db
+            print()
 
-    print(str(tw_dict))
+    # # finds item_ids that exist in both lists
+    # item_id_both_exists = set(tw_dict.keys()).intersection(wa_dict.keys())
+    # item_id_both_exists = sorted(item_id_both_exists)
+    # print("Fusing item lists... " + )
+
+    # # finds item_ids that only exists exclusively in tamsinwhitfield_db (tw_dict)
+    # tw_exclusive = [x for x in tw_dict.keys() if x not in wa_dict.keys()]
+
+    # # finds item_ids that only exists exclusively in web_archive_db (wa_dict)
+    # wa_exclusive = [x for x in wa_dict.keys() if x not in tw_dict.keys()]
+
 
 # Parses a TSV and returns a dictionary.
 # Grabs the first item in the TSV on each line as the key, converts
