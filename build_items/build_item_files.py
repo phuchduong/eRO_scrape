@@ -127,118 +127,13 @@ def main():
             # Item does not exist in wa_item_db
             pass
 
-    ############
-    # Patterns #
-    ############
-    # Begin item match
-    new_item_line_pattern = "^\s{4,}\[\d{3,5}\]\s{1,}?=\s{1,}?{$\n"
-    is_new_item_line = re.compile(new_item_line_pattern)
+    # parses the lua file into a python dictionary
+    old_item_info_lua_renewal = "D:/repos/eRODev/eRO Client Data/System/itemInfosryx.lub"
+    renewal_lua = parse_iteminfo_lua(file_dir=old_item_info_lua_renewal, is_korean=True)
 
-    # 3~5 digit item code
-    item_code_pattern = "\d{3,5}"
-    extract_item_code = re.compile(item_code_pattern)
+    new_item_info_lua = "D:/repos/eRODev/eRO Client Data/System/new_itemInfosryx.lub"
+    write_item_info_lua_to_file(file_dir=new_item_info_lua, lua_parts=renewal_lua, is_korean=True)
 
-    key_value_line_pattern = '^\s{4,}\w{1,}\s{1,}?=\s{1,}?((".{0,}"|\d{1,})|{.{0,}}),?$\n'
-    is_key_value_line = re.compile(key_value_line_pattern)
-
-    multi_line_embed_key_pattern = '^\s{4,}\w{1,}\s{1,}?=\s{1,}?{$\n'
-    is_multi_line_embed_key = re.compile(multi_line_embed_key_pattern)
-
-    multi_line_embed_value_pattern ='^\s{4,}".{0,}",?$\n'
-    is_multi_line_embed_value = re.compile(multi_line_embed_value_pattern)
-
-    end_of_data_pattern = "^function \w{0,}\(\)$\n"
-    is_end_of_data = re.compile(end_of_data_pattern)
-
-    nid_beg = ""
-    nid_dict = {}
-    nid_end = "\n"
-    current_item_id = -1
-    current_embed_key = ""
-    stage_of_file = "beg"
-    # read in new iteminfo
-    with open(file=old_iteminfo_dir, mode="r", encoding="ms949") as nid:
-        print("Opening... " + new_iteminfo_dir)
-        counter = 0
-        for line in nid:
-            if is_new_item_line.match(line):
-                # if item code is found,
-                # extract item code
-                current_item_id = re.search(pattern=extract_item_code, string=line).group(0)
-                if current_item_id not in nid_dict:
-                    nid_dict[current_item_id] = {}
-                    # make a new dictionary reference
-                stage_of_file = "mid"
-            elif is_key_value_line.match(line):
-                # if this is a key_value_pair line
-                # add that key and value to the current item
-                key_value_list = line.split("=")
-
-                # key
-                key = key_value_list[0].strip().replace("\n", "")
-
-                # value
-                value = key_value_list[1].strip().replace("\n", "")  # removes trialing comma
-                if value[-1:] == ",":
-                    # if there is a trailing comma, remove it
-                    value = value[:-1]
-
-                # adds key and value to the current item dict
-                nid_dict[current_item_id][key] = value
-            elif is_multi_line_embed_key.match(line):
-                # if it's the start of a multi line embed, create an embedded dictionary with a list
-                # as it's value
-                current_embed_key = line.split("=")[0].strip()
-                nid_dict[current_item_id][current_embed_key] = []
-            elif is_multi_line_embed_value.match(line):
-                value = line.strip()
-                if value[-1:] == ",":
-                    value = value[:-1]
-                nid_dict[current_item_id][current_embed_key].append(value)
-            elif stage_of_file == "beg":
-                nid_beg += line
-            elif is_end_of_data.match(line):
-                stage_of_file = "end"
-                nid_end += line
-            elif stage_of_file == "end":
-                nid_end += line
-            counter += 1
-        print("Lines found: " + str(counter))
-
-    iteminfo_dir = "D:/repos/eRODev/eRO Client Data/System/new_itemInfosryx.lub"
-    spaces_per_tab = 4
-    tab = " " * spaces_per_tab
-
-    f = open(file=iteminfo_dir, mode="w+", encoding="ms949")
-    f.write("\n" + nid_beg)  # first line
-
-    for item_id in nid_dict:
-        f.write(tab + "[" + str(item_id) + "] = {\n")
-        for item_key in nid_dict[item_id]:
-            if isinstance(nid_dict[item_id][item_key], list):
-
-                multi_line_embed_str = tab * 2 + item_key + " = {\n"
-
-                for item in nid_dict[item_id][item_key]:
-                    multi_line_embed_str += tab * 3 + item + ",\n"
-                multi_line_embed_str += tab * 2 + "},\n"
-                f.write(multi_line_embed_str)
-            else:
-                f.write(tab * 2 + str(item_key) + " = " + str(nid_dict[item_id][item_key]) + ",\n")
-        f.write(tab + "},\n")
-    f.write(nid_end)
-    f.close()
-
-    # for x in nid_dict[key]:
-    #     print(print("\t" * 2 + x + " = " + nid_dict[key][x]) + ",\n")
-    # read in old iteminfo
-    # Using Windows-949 encoding (korean)
-    with open(file=old_iteminfo_dir, mode="r", encoding="ms949") as oid:
-        print("Opening... " + old_iteminfo_dir)
-        counter = 0
-        for line in oid:
-            counter += 1
-        print("Lines found: " + str(counter))
 
 # Parses a TSV and returns a dictionary.
 # Grabs the first item in the TSV on each line as the key, converts
@@ -260,6 +155,151 @@ def parse_item_scrape_tsv(file_reader, ignore_list):
     return tsv_dict
 
 
+# Parses an iteminfo lua and returns a 3 element dictionary whoses keys are
+# beg, mid, and end.
+# beg is the begining of the file
+# mid is the data structure in the middle of the file as a dictionary
+# end is the remaining code in the file after the data structure
+def parse_iteminfo_lua(file_dir, is_korean):
+    if is_korean:
+        encoding = "ms949"
+    else:
+        encoding = "utf-8"
+    ############
+    # Patterns #
+    ############
+    # Begin item match
+    new_item_line_pattern = "^\s{4,}\[\d{3,5}\]\s{1,}?=\s{1,}?{$\n"
+    is_new_item_line = re.compile(new_item_line_pattern)
+
+    # 3~5 digit item code
+    item_code_pattern = "\d{3,5}"
+    extract_item_code = re.compile(item_code_pattern)
+
+    # line that contains key value pairs
+    key_value_line_pattern = '^\s{4,}\w{1,}\s{1,}?=\s{1,}?((".{0,}"|\d{1,})|{.{0,}}),?$\n'
+    is_key_value_line = re.compile(key_value_line_pattern)
+
+    # line that starts a multi line embedded object in the lua object
+    multi_line_embed_key_pattern = '^\s{4,}\w{1,}\s{1,}?=\s{1,}?{$\n'
+    is_multi_line_embed_key = re.compile(multi_line_embed_key_pattern)
+
+    # line that has the values of a multi line embedded object
+    multi_line_embed_value_pattern = '^\s{4,}".{0,}",?$\n'
+    is_multi_line_embed_value = re.compile(multi_line_embed_value_pattern)
+
+    # marks the end of the data structure of the file
+    end_of_data_pattern = "^function \w{0,}\(\)$\n"
+    is_end_of_data = re.compile(end_of_data_pattern)
+
+    # return objects
+    lua_beg = ""
+    lua_dict = {}
+    lua_end = "\n"
+
+    # loop state objects
+    current_item_id = -1
+    current_embed_key = ""
+    stage_of_file = "beg"
+
+    with open(file=file_dir, mode="r", encoding=encoding) as lua:
+        print("Opening... " + file_dir)
+        counter = 0
+        for line in lua:
+            if is_new_item_line.match(line):
+                # if item code is found,
+                # extract item code
+                current_item_id = re.search(pattern=extract_item_code, string=line).group(0)
+                if current_item_id not in lua_dict:
+                    lua_dict[current_item_id] = {}
+                    # make a new dictionary reference
+                stage_of_file = "mid"
+            elif is_key_value_line.match(line):
+                # if this is a key_value_pair line
+                # add that key and value to the current item
+                key_value_list = line.split("=")
+
+                # key
+                key = key_value_list[0].strip().replace("\n", "")
+
+                # value
+                value = key_value_list[1].strip().replace("\n", "")  # removes trialing comma
+                if value[-1:] == ",":
+                    # if there is a trailing comma, remove it
+                    value = value[:-1]
+
+                # adds key and value to the current item dict
+                lua_dict[current_item_id][key] = value
+            elif is_multi_line_embed_key.match(line):
+                # if it's the start of a multi line embed, create an embedded dictionary with a list
+                # as it's value
+                current_embed_key = line.split("=")[0].strip()
+                lua_dict[current_item_id][current_embed_key] = []
+            elif is_multi_line_embed_value.match(line):
+                value = line.strip()
+                if value[-1:] == ",":
+                    value = value[:-1]
+                lua_dict[current_item_id][current_embed_key].append(value)
+            elif stage_of_file == "beg":
+                lua_beg += line
+            elif is_end_of_data.match(line):
+                stage_of_file = "end"
+                lua_end += line
+            elif stage_of_file == "end":
+                lua_end += line
+            counter += 1
+
+    item_lua_dict = {
+        "beg": lua_beg,
+        "mid": lua_dict,
+        "end": lua_end
+    }
+    return item_lua_dict
+
+
+# Writes an iteminfo lua and from a 3 element dictionary parameter [1]<lua_parts> whoses keys are
+# beg, mid, and end.
+# beg is the begining of the file
+# mid is the data structure in the middle of the file as a dictionary
+# end is the remaining code in the file after the data structure
+# [0]<file_dir> is the full path of the file to be written
+# [2]<is_korean> can be True or False, true will specify encoding of ms949 for korean encoding
+#     while false will yeild utf-8 encoding
+def write_item_info_lua_to_file(file_dir, lua_parts, is_korean):
+    # file parts
+    lua_beg = lua_parts["beg"]
+    lua_dict = lua_parts["mid"]
+    lua_end = lua_parts["end"]
+
+    # writting specs
+    spaces_per_tab = 4
+    tab = " " * spaces_per_tab
+
+    # opening file for write
+    if is_korean:
+        encoding = "ms949"
+    else:
+        encoding = "utf-8"
+    f = open(file=file_dir, mode="w+", encoding=encoding)
+    f.write("\n" + lua_beg)  # first line
+
+    for item_id in lua_dict:
+        f.write(tab + "[" + str(item_id) + "] = {\n")
+        for item_key in lua_dict[item_id]:
+            if isinstance(lua_dict[item_id][item_key], list):
+
+                multi_line_embed_str = tab * 2 + item_key + " = {\n"
+
+                for item in lua_dict[item_id][item_key]:
+                    multi_line_embed_str += tab * 3 + item + ",\n"
+                multi_line_embed_str += tab * 2 + "},\n"
+                f.write(multi_line_embed_str)
+            else:
+                f.write(tab * 2 + str(item_key) + " = " + str(lua_dict[item_id][item_key]) + ",\n")
+        f.write(tab + "},\n")
+    f.write("}\n")
+    f.write(lua_end)
+    f.close()
+
+
 main()
-
-
