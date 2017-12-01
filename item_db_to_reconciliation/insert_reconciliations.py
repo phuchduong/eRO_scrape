@@ -11,10 +11,10 @@
 '''
 import openpyxl  # excel plugin
 
-out_path = "C:/repos/eRODev/rAthena Files/db/import/ero_item_db"
+out_path = "D:/repos/eRODev/rAthena Files/db/import/ero_item_db"
 
 # extracts data from the spreadsheet
-sheet_path = "C:/repos/essencero_restoration/item_db_to_reconciliation/reconciliation.xlsx"
+sheet_path = "D:/repos/essencero_restoration/item_db_to_reconciliation/reconciliation.xlsx"
 
 excel = openpyxl.load_workbook(filename=sheet_path, data_only=True)
 
