@@ -12,3 +12,4 @@ Night_Ring
 mini game token
 valkyrie fragment
 event token
+drooping vide in lua
