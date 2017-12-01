@@ -315,7 +315,7 @@ def write_item_info_lua_to_file(file_dir, lua_parts, encoding):
     for item_id in lua_dict_keys:
         item_id = str(item_id)
         f.write(tab + "[" + item_id + "] = {\n")
-        for item_key in lua_dict[item_id]:
+        for item_key in sorted(lua_dict[item_id]):
             if isinstance(lua_dict[item_id][item_key], list):
 
                 multi_line_embed_str = tab * 2 + item_key + " = {\n"
