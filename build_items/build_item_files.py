@@ -17,6 +17,7 @@
     Linkedin: https://www.linkedin.com/in/phuchduong/
 '''
 import re  # regular expression
+from os.path import isdir   # checks to see if a folder exists
 
 
 def main():
@@ -31,19 +32,22 @@ def main():
     #       /old_essence_item_db.txt
     #   \web_scrape_web_archive
     #       /item_db_web_archive.tsv
-    repo_dir = "C:/repos/essencero_restoration"  # change this to your own
+    if isdir("C:/repos/essencero_restoration"):
+        repo_dir = "C:/repos"
+    elif isdir("D:/repos"):
+        repo_dir = "D:/repos"  # change this to your own
 
     # data webscraped from tamsinwhitfield
-    tw_dir = "\web_scrape_tamsinwhitfield/old_essence_item_db.txt"  # tab deliminated
+    tw_dir = repo_dir + "/essencero_restoration/web_scrape_tamsinwhitfield/old_essence_item_db.txt"  # tab deliminated
 
     # data webscraped from web archive (the way back machine)
-    wa_dir = "\web_scrape_web_archive/item_db_web_archive.tsv"
+    wa_dir = repo_dir + "/essencero_restoration/web_scrape_web_archive/item_db_web_archive.tsv"
 
     # new iteminfo
-    new_iteminfo_dir = "C:/repos/eRODev/eRO Client Data\data/luafiles514/lua files\datainfo/pre_re_itemInfo.lua"
+    new_iteminfo_dir = repo_dir + "/eRODev/eRO Client Data\data/luafiles514/lua files\datainfo/pre_re_itemInfo.lua"
 
     # old iteminfo
-    old_iteminfo_dir = "C:/repos/eRODev/eRO Client Data\system/itemInfosryx.lub"
+    old_iteminfo_dir = repo_dir + "/eRODev/eRO Client Data\system/itemInfosryx.lub"
 
     ##################
     # old eRO fields #
@@ -86,8 +90,8 @@ def main():
     ######################
     # Read in tamsinwhitfield as a dictionary by item_id as the key, remaining line as values
     # Ignores any item in the ignore list.
-    with open(file=repo_dir + tw_dir, mode="r") as tw:
-        print("Opening... " + repo_dir + tw_dir)
+    with open(file=tw_dir, mode="r") as tw:
+        print("Opening... " + tw_dir)
         tw_header = tw.readline()  # header
         tw_dict = parse_item_scrape_tsv(file_reader=tw, ignore_list=old_ero_ignore_list)
         print("Found... " + str(len(tw_dict)) + " items...")
@@ -97,8 +101,8 @@ def main():
     ##################
     # Read in webarchive as a dictionary by item_id as the key, remaining line as values
     # Ignores any item in the ignore list.
-    with open(file=repo_dir + wa_dir, mode="r") as wa:
-        print("Opening... " + repo_dir + wa_dir)
+    with open(file=wa_dir, mode="r") as wa:
+        print("Opening... " + wa_dir)
         wa_header = wa.readline()  # header
         wa_dict = parse_item_scrape_tsv(file_reader=wa, ignore_list=old_ero_ignore_list)
         print("Found... " + str(len(wa_dict)) + " items...")
@@ -129,21 +133,26 @@ def main():
 
     # for a list of valid codecs:
     #     essencero_restoration\Lua Codecs.xlsx
+    # 437 is english codec
     encoding = "437"
-        # 437 is english codec
 
     # parses ero iteminfo lua file into a python dictionary
-    old_item_info_lua_renewal = "C:/repos/eRODev/eRO Client Data\system/itemInfosryx.lub"
+    old_item_info_lua_renewal = repo_dir + "/eRODev/eRO Client Data\system/itemInfosryx.lub"
     old_ero_lua = parse_item_info_lua(file_dir=old_item_info_lua_renewal, encoding=encoding)
+    # old_ero_headers = scan_headers(dictionary=old_ero_lua["mid"], prefix='o', pk="reborn_id")
 
     # parses pre-renewal iteminfo lua file into a python dictionary
-    old_item_info_lua_prerenewal = "C:/repos/eRODev/eRO Client Data\data/luafiles514/lua files\datainfo/pre_re_itemInfo.lua"
+    old_item_info_lua_prerenewal = repo_dir + "/eRODev/eRO Client Data\data/luafiles514/lua files\datainfo/pre_re_itemInfo.lua"
     prerenewal_lua = parse_item_info_lua(file_dir=old_item_info_lua_prerenewal, encoding=encoding)
 
+    for item_id in prerenewal_lua["mid"]:
+        if item_id not in old_ero_lua["mid"]:
+            print("item id: " + str(item_id))
+
     # Writes new lua to file
-    new_item_info_lua = "C:/repos/eRODev/eRO Client Data/system/new_itemInfosryx.lub"
+    new_item_info_lua = repo_dir + "/eRODev/eRO Client Data/system/new_itemInfosryx.lub"
     write_item_info_lua_to_file(file_dir=new_item_info_lua, lua_parts=old_ero_lua, encoding=encoding)
-    
+
 
 # Parses a TSV and returns a dictionary.
 # Grabs the first item in the TSV on each line as the key, converts
@@ -157,7 +166,10 @@ def main():
 def parse_item_scrape_tsv(file_reader, ignore_list):
     tsv_dict = {}
     for line in file_reader:  # body
-        item_id = int(line.split("\t")[0])
+        try:
+            item_id = int(line.split("\t")[0])
+        except ValueError:
+            item_id = int(line.split("    ")[0])
         if item_id not in ignore_list:
             # skip items in the ignore list
             item_body = line[len(str(item_id)) + 1:]  # grabs everything after the item_id
@@ -299,8 +311,10 @@ def write_item_info_lua_to_file(file_dir, lua_parts, encoding):
     f = open(file=file_dir, mode="w+", encoding=encoding)
     f.write(lua_beg)  # first line
 
-    for item_id in lua_dict:
-        f.write(tab + "[" + str(item_id) + "] = {\n")
+    lua_dict_keys = sorted([int(x) for x in lua_dict])
+    for item_id in lua_dict_keys:
+        item_id = str(item_id)
+        f.write(tab + "[" + item_id + "] = {\n")
         for item_key in lua_dict[item_id]:
             if isinstance(lua_dict[item_id][item_key], list):
 
@@ -317,6 +331,22 @@ def write_item_info_lua_to_file(file_dir, lua_parts, encoding):
     f.write(lua_end)
     print("Writing " + str(len(lua_dict)) + " items to... " + file_dir)
     f.close()
+
+
+# Takes in a dictionary and creates a list of headers for a csv file
+# based upon all keys inside of the dictionary.
+# Params:
+#   dict: takes in a dictioanry to populate the headers with its keys
+#   prefix: what the items headers should be prefixed with, helps mitigate colisions when
+#       merging two dictionaries together
+#   pk: primary key name of the parent key of the file to be incorporated into the list of header names
+# Return: a list of header names
+def scan_headers(dictionary, prefix, pk):
+    headers = [pk]
+    for key in dictionary:
+        if headers[key]:
+            if key not in headers:
+                headers.append(key)
 
 
 main()
