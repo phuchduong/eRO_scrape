@@ -21,6 +21,11 @@ from os.path import isdir   # checks to see if a folder exists
 
 
 def main():
+    # for a list of valid codecs:
+    #     essencero_restoration\Lua Codecs.xlsx
+    # 437 is english codec
+    encoding = "437"
+
     ###############
     # file system #
     ###############
@@ -86,22 +91,22 @@ def main():
     ######################
     # Read in tamsinwhitfield as a dictionary by item_id as the key, remaining line as values
     # Ignores any item in the ignore list.
-    with open(file=tw_dir, mode="r") as tw:
-        print("Opening... " + tw_dir)
-        tw_header = tw.readline()  # header
-        tw_dict = parse_item_scrape_tsv(file_reader=tw, ignore_list=old_ero_ignore_list)
-        print("Found... " + str(len(tw_dict)) + " items...")
+    # with open(file=tw_dir, mode="r") as tw:
+    #     print_opening_dir(file_dir=tw_dir)
+    #     tw_header = tw.readline()  # header
+    #     tw_dict = parse_item_scrape_tsv(file_reader=tw, ignore_list=old_ero_ignore_list)
+    #     print_writing_status(counter=len(tw_dict), file_dir=tw_dir)
 
     ##################
     # web archive db #
     ##################
     # Read in webarchive as a dictionary by item_id as the key, remaining line as values
     # Ignores any item in the ignore list.
-    with open(file=wa_dir, mode="r") as wa:
-        print("Opening... " + wa_dir)
-        wa_header = wa.readline()  # header
-        wa_dict = parse_item_scrape_tsv(file_reader=wa, ignore_list=old_ero_ignore_list)
-        print("Found... " + str(len(wa_dict)) + " items...")
+    # with open(file=wa_dir, mode="r") as wa:
+    #     print_opening_dir(file_dir=wa_dir)
+    #     wa_header = wa.readline()  # header
+    #     wa_dict = parse_item_scrape_tsv(file_reader=wa, ignore_list=old_ero_ignore_list)
+    #     print_writing_status(counter=len(tw_dict), file_dir=wa_dir)
 
     #########################
     # reborn item_db custom #
@@ -109,42 +114,16 @@ def main():
     reborn_item_db_dir = repo_dir + "/eRODev/rAthena Files/db/import/ero_item_db/item_db.txt"
     master_db = parse_item_db(file_dir=reborn_item_db_dir, item_db=master_db)
 
-    ##################################################
-    # Combine both old item db dictionaries together #
-    ##################################################
-
-    # Combines both item keys togther into a set that is sorted
-    item_ids_all = list(wa_dict.keys()) + list(tw_dict.keys())  # Adds both item lists together
-    item_ids_all = set(item_ids_all)  # removes duplicate item_ids
-    item_ids_all = sorted(item_ids_all)  # sorts the keys
-
-    for item_id in item_ids_all:
-        # parse tw items
-        if item_id in tw_dict:
-            tw_item = tw_dict[item_id]
-        else:
-            # Item does not exist in tw_item_db
-            pass
-
-        # parse wa items
-        if item_id in wa_dict:
-            wa_item = wa_dict[item_id]
-        else:
-            # Item does not exist in wa_item_db
-            pass
-
-    # for a list of valid codecs:
-    #     essencero_restoration\Lua Codecs.xlsx
-    # 437 is english codec
-    encoding = "437"
-
     ########################
     # reborn item_info lua #
     ########################
     # parses ero iteminfo lua file into a python dictionary
     existing_reborn_lua_dir = repo_dir + "/eRODev/eRO Client Data/system/itemInfosryx.lub"
-    existing_reborn_lua = parse_item_info_lua(file_dir=existing_reborn_lua_dir, encoding=encoding)
-    existing_reborn_lua_headers = scan_headers(dictionary=existing_reborn_lua["mid"], name_of_pk="reborn_id")
+    existing_reborn_lua = parse_item_info_lua(
+        file_dir=existing_reborn_lua_dir,
+        item_dict=master_db,
+        encoding=encoding)
+    master_db = existing_reborn_lua["mid"]
 
     #############################
     # pre-renewal item_info lua #
@@ -160,13 +139,15 @@ def main():
     ###########
     # outputs #
     ###########
-    write_master_db_to_tsv(file_dir=repo_dir + "/eRODev/work in progress/master_db.tsv")
+    write_dict_to_tsv(
+        file_dir=repo_dir + "/eRODev/work in progress/master_db.tsv",
+        item_dict=master_db,
+        encoding=encoding)
 
     # writes the item lua to a tsv
-    write_lua_items_to_tsv(
+    write_dict_to_tsv(
         file_dir=repo_dir + "/eRODev/eRO Client Data/System/new_itemInfosryx.tsv",
-        headers=existing_reborn_lua_headers,
-        lua_dict=existing_reborn_lua["mid"],
+        item_dict=existing_reborn_lua["mid"],
         encoding=encoding)
 
     # Writes new lua to file
@@ -202,7 +183,8 @@ def parse_item_scrape_tsv(file_reader, ignore_list):
 # beg is the begining of the file
 # mid is the data structure in the middle of the file as a dictionary
 # end is the remaining code in the file after the data structure
-def parse_item_info_lua(file_dir, encoding):
+def parse_item_info_lua(file_dir, item_dict, encoding):
+    print_opening_dir(file_dir=file_dir)
     ############
     # Patterns #
     ############
@@ -232,15 +214,12 @@ def parse_item_info_lua(file_dir, encoding):
 
     # return objects
     lua_beg = ""
-    lua_dict = {}
     lua_end = "\n"
 
     # loop state objects
     current_item_id = -1
-    current_embed_key = ""
     stage_of_file = "beg"
 
-    print("Opening Lua..." + file_dir)
     with open(file=file_dir, mode="r", encoding=encoding) as lua:
         counter = 0
         for line in lua:
@@ -248,8 +227,8 @@ def parse_item_info_lua(file_dir, encoding):
                 # if item code is found,
                 # extract item code
                 current_item_id = re.search(pattern=extract_item_code, string=line).group(0)
-                if current_item_id not in lua_dict:
-                    lua_dict[current_item_id] = {}
+                if current_item_id not in item_dict:
+                    item_dict[current_item_id] = {}
                     # make a new dictionary reference
                 stage_of_file = "mid"
             elif is_key_value_line.match(line):
@@ -261,31 +240,44 @@ def parse_item_info_lua(file_dir, encoding):
                 key = key_value_list[0].strip().replace("\n", "")
 
                 # value
-                value = key_value_list[1].strip().replace("\n", "")  # removes trialing comma
-                if value[-1:] == ",":
+                value = key_value_list[1].strip().replace("\n", "").replace("}", "").replace("{", "")
+                if value[-1:] == ",":  # removes trialing comma
                     # if there is a trailing comma, remove it
                     value = value[:-1]
-
+                
                 # adds key and value to the current item dict
-                lua_dict[current_item_id][key] = value
+                if key == "identifiedDescriptionName":
+                    item_dict[current_item_id]["description"] = value
+                elif key == "identifiedResourceName":
+                    item_dict[current_item_id]["sprite"] = value
+                elif key == "identifiedDisplayName":
+                    item_dict[current_item_id]["display_name"] = value
             elif is_multi_line_embed_key.match(line):
                 # if it's the start of a multi line embed, create an embedded dictionary with a list
                 # as it's value
-                current_embed_key = line.split("=")[0].strip()
-                lua_dict[current_item_id][current_embed_key] = []
+                item_dict[current_item_id]["description"] = []
             elif is_multi_line_embed_value.match(line):
+                # if it's the values of a multi line embed, append it to the descriptions list
                 value = line.strip()
                 if value[-1:] == ",":
                     value = value[:-1]
-                lua_dict[current_item_id][current_embed_key].append(value)
+                item_dict[current_item_id]["description"].append(value)
             elif stage_of_file == "beg":
+                # if it's still part of the file before the item data structure,
+                #   record everything to be rewritten later
                 lua_beg += line
             elif is_end_of_data.match(line):
+                # if it's past part of the item data structure in the file,
+                #   record everything to be rewritten later
                 stage_of_file = "end"
                 lua_end += line
             elif stage_of_file == "end":
+                # if it's past part of the item data structure in the file,
+                #   record everything to be rewritten later
                 lua_end += line
             else:
+                # These are the lines skipped, print to be sure we didn't leave
+                #     anything  behind.
                 ignored_data = line.strip()
                 if ignored_data != "":
                     if ignored_data[0] != "}":
@@ -295,10 +287,26 @@ def parse_item_info_lua(file_dir, encoding):
     print("Parsed " + str(counter) + " lines from Lua.")
     item_lua_dict = {
         "beg": lua_beg,
-        "mid": lua_dict,
+        "mid": item_dict,
         "end": lua_end
     }
     return item_lua_dict
+
+
+# Tells the user in the console what file is currently being opened.
+def print_opening_dir(file_dir):
+    max_length = 30
+    if len(file_dir) > max_length:
+        filename = "..." + file_dir[-max_length:]
+    else:
+        filename = file_dir
+    print("Opening: " + filename)
+
+
+# Tells the user how many lines were writte to a file
+def print_writing_status(counter, file_dir):
+    filename = file_dir.split("/")[-1]
+    print("Found... " + str(counter) + " items in " + filename + "\n")
 
 
 # Takes in an existing item dictionary then adds to it by reading in an item_db
@@ -307,8 +315,9 @@ def parse_item_info_lua(file_dir, encoding):
 #   item_db = dictionary of existing items
 # Return: the same item_db that was augmented with the item_db entries
 def parse_item_db(file_dir, item_db):
+    print_opening_dir(file_dir=file_dir)
     with open(file=file_dir, mode="r") as reborn_item_db_f:
-        item_db_entry_pattern = '^\d{3,5}(,.{0,}){19,}$\n'  # looks for an item_id followed by 19 commas
+        item_db_entry_pattern = '^\d{3,5},.{0,}$\n'  # looks for an item_id followed by 19 commas
         is_item_db_line = re.compile(item_db_entry_pattern)
         counter = 0
         for line in reborn_item_db_f:
@@ -339,27 +348,28 @@ def parse_item_db(file_dir, item_db):
                 item_db[item_id]["script"] = item_n_scripts[1].replace("}", "").strip()
                 item_db[item_id]["script_on_equip"] = item_n_scripts[2].replace("}", "").strip()
                 item_db[item_id]["script_on_unequip"] = item_n_scripts[3].replace("}", "").strip()
-
-                counter += 0
-    print("Found " + str(counter) + " in " + file_dir)
+                counter += 1
+    print_writing_status(counter=counter,file_dir=file_dir)
     return item_db
 
 
-# Summary: takes in a lua dictionary, flattens it and outputs to csv
+# Summary: takes in an item dictionary, outputs to csv
 # Params:
 #       -file_dir: full path to file to be written out
-#       -headers: the headers that will exist in this lua file, also to used as keys to traverse
-#           the lua dictionary.
-#       -lua_dict: the dictionary to be converted to csv
-def write_lua_items_to_tsv(file_dir, headers, lua_dict, encoding):
+#       -item_dict: the dictionary to be converted to csv
+#       -encoding: the encoding to be used to write the file
+def write_dict_to_tsv(file_dir, item_dict, encoding):
+    print_opening_dir(file_dir=file_dir)
+    headers = scan_headers(dictionary=item_dict, name_of_pk="item_id")
     f = open(file=file_dir, mode="w", encoding=encoding)
     f.write("\t".join(headers) + "\n")   # writes headers
     counter = 1
-    for item_id in lua_dict:    # loops over each item
+    for item_id in item_dict:    # loops over each item
         line = str(item_id)
         for header in headers:  # loops over each attribute inside each item
-            if header in lua_dict[item_id]:
-                line += "\t" + str(lua_dict[item_id][header])
+            if header in item_dict[item_id]:
+                line += str(item_dict[item_id][header])
+            line += "\t"
         f.write(line + "\n")
         counter += 1
     f.close()
@@ -375,6 +385,8 @@ def write_lua_items_to_tsv(file_dir, headers, lua_dict, encoding):
 # [2]<is_korean> can be True or False, true will specify encoding of ms949 for korean encoding
 #     while false will yeild utf-8 encoding
 def write_lua_items_to_lua(file_dir, lua_parts, encoding):
+    print_opening_dir(file_dir=file_dir)
+
     # file parts
     lua_beg = lua_parts["beg"]
     lua_dict = lua_parts["mid"]
