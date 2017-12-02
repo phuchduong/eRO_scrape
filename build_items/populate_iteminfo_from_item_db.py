@@ -364,5 +364,53 @@ def scan_headers(dictionary, name_of_pk):
                 headers.append(attribute)
     return headers
 
+# derives unidentifiedDisplayName from the item_db
+def get_unidentifiedDisplayName(item_entry):
+    # if it's not a weapon or an armor, keep the name the same
+    #   when unidentified since it kind of doesn't matter
+    unidentifiedDisplayName = item_entry["display_name"]
+    return unidentifiedDisplayName
+
+# derives unidentifiedResourceName from the item_db
+def get_unidentifiedResourceName(item_entry):
+    
+    return unidentifiedResourceName
+
+
+# derives unidentifiedDescriptionName from the item_db
+def get_unidentifiedDescriptionName(item_entry):
+    
+    return unidentifiedDescriptionName
+
+
+# derives identifiedDisplayName from the item_db
+def get_identifiedDisplayName(item_entry):
+    
+    return identifiedDisplayName
+
+
+# derives identifiedResourceName from the item_db
+def get_identifiedResourceName(item_entry):
+    
+    return identifiedResourceName
+
+
+# derives identifiedDescriptionName from the item_db
+def get_identifiedDescriptionName(item_entry):
+    
+    return identifiedDescriptionName
+
+
+# derives slotCount from the item_db
+def get_slotCount(item_entry):
+    
+    return slotCount
+
+
+# derives ClassNum from the item_db
+def get_ClassNum(item_entry):
+    
+    return ClassNum
+
 
 main()
