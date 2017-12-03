@@ -53,8 +53,7 @@ def main():
     # 3. Insert entries that do not exist iteminfo.lua from item_db #
     #################################################################
     iteminfo_lua["iteminfo_db"] = insert_new_items_into_lua_db(
-                                    lua_db=iteminfo_lua["iteminfo_db"],
-                                    recon_db=recon_db)
+        lua_db=iteminfo_lua["iteminfo_db"], recon_db=recon_db)
     #################################################################
     # 4. Write out the item dictionary to a new iteminfo.lua        #
     #################################################################
@@ -384,7 +383,7 @@ def get_identifiedDescriptionName(item_entry):
     if description is None:
         identifiedDescriptionName = ['""']
     else:
-        description = description.replace("\"","\\\"")
+        description = description.replace("\"", "\\\"")
         identifiedDescriptionName = ['"' + description + '"']
     return identifiedDescriptionName
 
