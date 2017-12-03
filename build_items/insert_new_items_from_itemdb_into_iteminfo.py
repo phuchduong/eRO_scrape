@@ -342,7 +342,7 @@ def insert_new_items_into_lua_db(lua_db, recon_db):
 def get_unidentifiedDisplayName(item_entry):
     # this is the name of the item they see when it is unidentified
     item_name = item_entry["item_name"]
-    unidentifiedDisplayName = "Unidentified " + item_name
+    unidentifiedDisplayName = '"Unidentified ' + item_name + '"'
     return unidentifiedDisplayName
 
 
@@ -352,7 +352,7 @@ def get_unidentifiedResourceName(item_entry):
     if item_entry["type_name"] == "Card":
         unidentifiedResourceName = card_sprite_str
     else:
-        unidentifiedResourceName = item_entry["sprite"]
+        unidentifiedResourceName = '"' + item_entry["sprite"] + '"'
     return unidentifiedResourceName
 
 
@@ -364,7 +364,7 @@ def get_unidentifiedDescriptionName(item_entry):
 
 # Derives identifiedDisplayName from the item entry
 def get_identifiedDisplayName(item_entry):
-    identifiedDisplayName = item_entry["item_name"]
+    identifiedDisplayName = '"' + item_entry["item_name"] + '"'
     return identifiedDisplayName
 
 
@@ -374,7 +374,7 @@ def get_identifiedResourceName(item_entry):
     if item_entry["type_name"] == "Card":
         identifiedResourceName = card_sprite_str
     else:
-        identifiedResourceName = item_entry["sprite"]
+        identifiedResourceName = '"' + item_entry["sprite"] + '"'
     return identifiedResourceName
 
 
@@ -382,8 +382,9 @@ def get_identifiedResourceName(item_entry):
 def get_identifiedDescriptionName(item_entry):
     description = item_entry["description"]
     if description is None:
-        description = ""
-    identifiedDescriptionName = [description]
+        identifiedDescriptionName = ['""']
+    else:
+        identifiedDescriptionName = ['"' + description + '"']
     return identifiedDescriptionName
 
 
