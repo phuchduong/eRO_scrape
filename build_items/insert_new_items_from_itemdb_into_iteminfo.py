@@ -18,7 +18,7 @@ def main():
     # for a list of valid codecs:
     #     essencero_restoration\Lua Codecs.xlsx
     # 437 is english codec
-    encoding = "437"
+    encoding = "850"
 
     ###############
     # file system #
@@ -220,7 +220,7 @@ def write_lua_items_to_lua(file_dir, lua_parts, encoding):
             if isinstance(lua_dict[item_id][item_key], list):
                 multi_line_embed_str = tab * 2 + str(item_key) + " = {\n"
 
-                if len(lua_dict[item_id][item_key]) >= 1:
+                if len(lua_dict[item_id][item_key][0]) > 0:
                     for item in lua_dict[item_id][item_key]:
                         multi_line_embed_str += tab * 3 + item + ",\n"
                 else:
@@ -228,6 +228,7 @@ def write_lua_items_to_lua(file_dir, lua_parts, encoding):
                 multi_line_embed_str += tab * 2 + "},\n"
                 f.write(multi_line_embed_str)
             else:
+                # Writes the key and value
                 f.write(tab * 2 + str(item_key) + " = " + str(lua_dict[item_id][item_key]) + ",\n")
         f.write(tab + "},\n")
     f.write("}\n")
@@ -257,7 +258,7 @@ def parse_reconciliation_spreadsheet(file_dir):
     # 8   old_id
     c_item_id = 9
     # 10  item key
-    c_item_name = 10
+    c_item_name = 11
     # 12  type
     # 13  price
     # 14  sell
@@ -347,7 +348,11 @@ def get_unidentifiedDisplayName(item_entry):
 
 # Derives unidentifiedResourceName from the item entry
 def get_unidentifiedResourceName(item_entry):
-    unidentifiedResourceName = item_entry["sprite"]
+    card_sprite_str = '"ÀÌ¸§¾ø´ÂÄ«µå"'
+    if item_entry["type_name"] == "Card":
+        unidentifiedResourceName = card_sprite_str
+    else:
+        unidentifiedResourceName = item_entry["sprite"]
     return unidentifiedResourceName
 
 
@@ -365,7 +370,11 @@ def get_identifiedDisplayName(item_entry):
 
 # Derives identifiedResourceName from the item entry
 def get_identifiedResourceName(item_entry):
-    identifiedResourceName = item_entry["sprite"]
+    card_sprite_str = '"ÀÌ¸§¾ø´ÂÄ«µå"'
+    if item_entry["type_name"] == "Card":
+        identifiedResourceName = card_sprite_str
+    else:
+        identifiedResourceName = item_entry["sprite"]
     return identifiedResourceName
 
 
