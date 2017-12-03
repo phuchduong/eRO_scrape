@@ -11,6 +11,7 @@
 '''
 import re  # regular expression
 from os.path import isdir   # checks to see if a folder exists
+import openpyxl  # excel plugin
 
 
 def main():
@@ -46,15 +47,19 @@ def main():
     #################################################################
     # 2. Parse in item_db, formulate an item dictionary             #
     #################################################################
-    itemdb_dir = repo_dir + "/eRODev/"
+    recon_dir = repo_dir + "/essencero_restoration/item_db_to_reconciliation/reconciliation.xlsx"
+    recon_db = parse_reconciliation_spreadsheet(file_dir=recon_dir)
     #################################################################
     # 3. Insert entries that do not exist iteminfo.lua from item_db #
     #################################################################
+    iteminfo_lua["iteminfo_db"] = insert_new_items_into_lua_db(
+                                lua_db=iteminfo_lua["iteminfo_db"],
+                                recon_db=recon_db)
     #################################################################
     # 4. Write out the item dictionary to a new iteminfo.lua        #
     #################################################################
     new_lua_dir = repo_dir + "/eRODev/eRO Client Data/system/new_itemInfosryx.lub"
-    write_lua_items_to_lua(file_dir=new_lua_dir, lua_parts=iteminfo_lua, encoding=encoding)
+    # write_lua_items_to_lua(file_dir=new_lua_dir, lua_parts=iteminfo_lua, encoding=encoding)
 
 
 # Parses an iteminfo lua and returns a 3 element dictionary whoses keys are
@@ -227,6 +232,136 @@ def write_lua_items_to_lua(file_dir, lua_parts, encoding):
     f.write(lua_end)
     print("Writing " + str(len(lua_dict)) + " items to... " + file_dir)
     f.close()
+
+
+# Takes in the reconciliation spreadsheet (xlsx) and parses it into an item dictionary
+def parse_reconciliation_spreadsheet(file_dir):
+    # to get values, use data_only=True, otherwise you'll get formulas
+    excel = openpyxl.load_workbook(filename=file_dir, data_only=True)
+
+    # to get sheetnames:
+    # excel.get_sheet_names()
+    target_sheet = "export"
+
+    ex_sheet = excel.get_sheet_by_name(target_sheet)
+    # Column reference
+    c_type_name = 1
+    # 2   Allowed Jobs
+    # 3   Classes_String
+    # 4   gender
+    # 5   Loc
+    c_description = 6
+    c_sprite = 7
+    # 8   old_id
+    c_item_id = 9
+    # 10  item key
+    c_item_name = 10
+    # 12  type
+    # 13  price
+    # 14  sell
+    # 15  weight
+    # 16  ATK[:MATK]
+    # 17  DEF
+    # 18  Range
+    c_slot = 19
+    # 20  Job
+    # 21  Class
+    # 22  Gender
+    # 23  Loc
+    # 24  wLV
+    # 25  eLV[:maxLevel]
+    # 26  Refineable
+    c_view_id = 27
+    # 28  { Script }
+    # 29  { OnEquip_Script }
+    # 30  { OnUnequip_Script }
+    # 31  Concat
+    item_dict = {}
+    for i in range(1, ex_sheet.max_row + 1):
+        type_name = ex_sheet.cell(row=i, column=c_type_name).value
+        description = ex_sheet.cell(row=i, column=c_description).value
+        sprite = ex_sheet.cell(row=i, column=c_sprite).value
+        item_id = ex_sheet.cell(row=i, column=c_item_id).value
+        item_name = ex_sheet.cell(row=i, column=c_item_name).value
+        slot = ex_sheet.cell(row=i, column=c_slot).value
+        view_id = ex_sheet.cell(row=i, column=c_view_id).value
+
+        item_dict[item_id] = {
+            "type_name": type_name,
+            "description": description,
+            "sprite": sprite,
+            "item_name": item_name,
+            "slot": slot,
+            "view_id": view_id,
+        }
+    return item_dict
+
+
+# Adds to the lua db, entries that do not exist in the lua db
+# from the recon db.
+def insert_new_items_into_lua_db(lua_db,recon_db):
+    for item_id in recon_db:
+        item_id = str(item_id)
+        if item_id in lua_db:
+            # Item already exists in the iteminfo
+            # In the future, use this area to override bad descriptions
+            print("Found... " + item_id + "Skipping...")
+        elif item_id not in lua_db:
+            # Insert new items into the item description
+
+            lua_db[item_id]["unidentifiedDisplayName"] = get_unidentifiedDisplayName(item_entry=lua_db[])
+            lua_db[item_id]["unidentifiedResourceName"] = get_unidentifiedResourceName(item_entry=lua_db[])
+            lua_db[item_id]["unidentifiedDescriptionName"] = get_unidentifiedDescriptionName(item_entry=lua_db[])
+            lua_db[item_id]["identifiedDisplayName"] = get_identifiedDisplayName(item_entry=lua_db[])
+            lua_db[item_id]["identifiedResourceName"] = get_identifiedResourceName(item_entry=lua_db[])
+            lua_db[item_id]["identifiedDescriptionName"] = get_identifiedDescriptionName(item_entry=lua_db[])
+            lua_db[item_id]["slotCount"] = get_slotCount(item_entry=lua_db[])
+            lua_db[item_id]["ClassNum"] = get_ClassNum(item_entry=lua_db[])
+        else:
+            print("Something went wrong:" + item_id)
+    return lua_db
+
+
+
+# Derives unidentifiedDisplayName from the item entry
+def get_unidentifiedDisplayName(item_entry)
+    return unidentifiedDisplayName
+
+
+# Derives unidentifiedResourceName from the item entry
+def get_unidentifiedResourceName(item_entry)
+    return unidentifiedResourceName
+
+
+# Derives unidentifiedDescriptionName from the item entry
+def get_unidentifiedDescriptionName(item_entry)
+    return unidentifiedDescriptionName
+
+
+# Derives identifiedDisplayName from the item entry
+def get_identifiedDisplayName(item_entry)
+    return identifiedDisplayName
+
+
+# Derives identifiedResourceName from the item entry
+def get_identifiedResourceName(item_entry)
+    return identifiedResourceName
+
+
+# Derives identifiedDescriptionName from the item entry
+def get_identifiedDescriptionName(item_entry)
+    return identifiedDescriptionName
+
+
+# Derives slotCount from the item entry
+def get_slotCount(item_entry)
+    return slotCount
+
+
+# Derives ClassNum from the item entry
+def get_ClassNum(item_entry)
+    return ClassNum
+
 
 
 # Takes in a dictionary and creates a list of headers for a csv file
