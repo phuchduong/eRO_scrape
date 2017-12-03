@@ -220,7 +220,7 @@ def write_lua_items_to_lua(file_dir, lua_parts, encoding):
             if isinstance(lua_dict[item_id][item_key], list):
                 multi_line_embed_str = tab * 2 + str(item_key) + " = {\n"
 
-                if len(lua_dict[item_id][item_key][0]) > 0:
+                if len(lua_dict[item_id][item_key][0]) > 2:
                     for item in lua_dict[item_id][item_key]:
                         multi_line_embed_str += tab * 3 + item + ",\n"
                 else:
@@ -384,6 +384,7 @@ def get_identifiedDescriptionName(item_entry):
     if description is None:
         identifiedDescriptionName = ['""']
     else:
+        description = description.replace("\"","\\\"")
         identifiedDescriptionName = ['"' + description + '"']
     return identifiedDescriptionName
 
