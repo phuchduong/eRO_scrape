@@ -53,13 +53,13 @@ def main():
     # 3. Insert entries that do not exist iteminfo.lua from item_db #
     #################################################################
     iteminfo_lua["iteminfo_db"] = insert_new_items_into_lua_db(
-                                lua_db=iteminfo_lua["iteminfo_db"],
-                                recon_db=recon_db)
+                                    lua_db=iteminfo_lua["iteminfo_db"],
+                                    recon_db=recon_db)
     #################################################################
     # 4. Write out the item dictionary to a new iteminfo.lua        #
     #################################################################
     new_lua_dir = repo_dir + "/eRODev/eRO Client Data/system/new_itemInfosryx.lub"
-    # write_lua_items_to_lua(file_dir=new_lua_dir, lua_parts=iteminfo_lua, encoding=encoding)
+    write_lua_items_to_lua(file_dir=new_lua_dir, lua_parts=iteminfo_lua, encoding=encoding)
 
 
 # Parses an iteminfo lua and returns a 3 element dictionary whoses keys are
@@ -218,11 +218,13 @@ def write_lua_items_to_lua(file_dir, lua_parts, encoding):
         f.write(tab + "[" + item_id + "] = {\n")
         for item_key in lua_dict[item_id]:
             if isinstance(lua_dict[item_id][item_key], list):
-
                 multi_line_embed_str = tab * 2 + str(item_key) + " = {\n"
 
-                for item in lua_dict[item_id][item_key]:
-                    multi_line_embed_str += tab * 3 + item + ",\n"
+                if len(lua_dict[item_id][item_key]) > 1:
+                    for item in lua_dict[item_id][item_key]:
+                        multi_line_embed_str += tab * 3 + item + ",\n"
+                else:
+                    multi_line_embed_str += tab * 3 + '"...Coming Soon..."' + ",\n"
                 multi_line_embed_str += tab * 2 + "},\n"
                 f.write(multi_line_embed_str)
             else:
@@ -277,7 +279,7 @@ def parse_reconciliation_spreadsheet(file_dir):
     # 30  { OnUnequip_Script }
     # 31  Concat
     item_dict = {}
-    for i in range(1, ex_sheet.max_row + 1):
+    for i in range(2, ex_sheet.max_row + 1):
         type_name = ex_sheet.cell(row=i, column=c_type_name).value
         description = ex_sheet.cell(row=i, column=c_description).value
         sprite = ex_sheet.cell(row=i, column=c_sprite).value
@@ -299,69 +301,100 @@ def parse_reconciliation_spreadsheet(file_dir):
 
 # Adds to the lua db, entries that do not exist in the lua db
 # from the recon db.
-def insert_new_items_into_lua_db(lua_db,recon_db):
+def insert_new_items_into_lua_db(lua_db, recon_db):
+    skipped = []
+    inserted = []
+    error = []
     for item_id in recon_db:
-        item_id = str(item_id)
-        if item_id in lua_db:
+        item_id_str = str(item_id)
+        if item_id_str in lua_db:
             # Item already exists in the iteminfo
             # In the future, use this area to override bad descriptions
-            print("Found... " + item_id + "Skipping...")
-        elif item_id not in lua_db:
+            skipped.append(item_id)
+        elif item_id_str not in lua_db:
             # Insert new items into the item description
-
-            lua_db[item_id]["unidentifiedDisplayName"] = get_unidentifiedDisplayName(item_entry=lua_db[])
-            lua_db[item_id]["unidentifiedResourceName"] = get_unidentifiedResourceName(item_entry=lua_db[])
-            lua_db[item_id]["unidentifiedDescriptionName"] = get_unidentifiedDescriptionName(item_entry=lua_db[])
-            lua_db[item_id]["identifiedDisplayName"] = get_identifiedDisplayName(item_entry=lua_db[])
-            lua_db[item_id]["identifiedResourceName"] = get_identifiedResourceName(item_entry=lua_db[])
-            lua_db[item_id]["identifiedDescriptionName"] = get_identifiedDescriptionName(item_entry=lua_db[])
-            lua_db[item_id]["slotCount"] = get_slotCount(item_entry=lua_db[])
-            lua_db[item_id]["ClassNum"] = get_ClassNum(item_entry=lua_db[])
+            item_entry = recon_db[item_id]
+            lua_db[item_id_str] = {
+                "unidentifiedDisplayName": get_unidentifiedDisplayName(item_entry=item_entry),
+                "unidentifiedResourceName": get_unidentifiedResourceName(item_entry=item_entry),
+                "unidentifiedDescriptionName": get_unidentifiedDescriptionName(item_entry=item_entry),
+                "identifiedDisplayName": get_identifiedDisplayName(item_entry=item_entry),
+                "identifiedResourceName": get_identifiedResourceName(item_entry=item_entry),
+                "identifiedDescriptionName": get_identifiedDescriptionName(item_entry=item_entry),
+                "slotCount": get_slotCount(item_entry=item_entry),
+                "ClassNum": get_ClassNum(item_entry=item_entry),
+            }
+            inserted.append(item_id)
         else:
-            print("Something went wrong:" + item_id)
+            error.append(item_id)
+    skipped = sorted(skipped)
+    inserted = sorted(inserted)
+    error = sorted(error)
+    print("Insertion status:")
+    print("Skipped: " + ",".join(str(x) for x in skipped))
+    print("Inserted: " + ",".join(str(x) for x in inserted))
+    print("Error: " + ",".join(str(x) for x in error))
     return lua_db
 
 
-
 # Derives unidentifiedDisplayName from the item entry
-def get_unidentifiedDisplayName(item_entry)
+def get_unidentifiedDisplayName(item_entry):
+    # this is the name of the item they see when it is unidentified
+    item_name = item_entry["item_name"]
+    unidentifiedDisplayName = "Unidentified " + item_name
     return unidentifiedDisplayName
 
 
 # Derives unidentifiedResourceName from the item entry
-def get_unidentifiedResourceName(item_entry)
+def get_unidentifiedResourceName(item_entry):
+    unidentifiedResourceName = item_entry["sprite"]
     return unidentifiedResourceName
 
 
 # Derives unidentifiedDescriptionName from the item entry
-def get_unidentifiedDescriptionName(item_entry)
+def get_unidentifiedDescriptionName(item_entry):
+    unidentifiedDescriptionName = '{ "Unknown Item, can be identified by using a ^6666CCMagnifier^000000." }'
     return unidentifiedDescriptionName
 
 
 # Derives identifiedDisplayName from the item entry
-def get_identifiedDisplayName(item_entry)
+def get_identifiedDisplayName(item_entry):
+    identifiedDisplayName = item_entry["item_name"]
     return identifiedDisplayName
 
 
 # Derives identifiedResourceName from the item entry
-def get_identifiedResourceName(item_entry)
+def get_identifiedResourceName(item_entry):
+    identifiedResourceName = item_entry["sprite"]
     return identifiedResourceName
 
 
 # Derives identifiedDescriptionName from the item entry
-def get_identifiedDescriptionName(item_entry)
+def get_identifiedDescriptionName(item_entry):
+    description = item_entry["description"]
+    if description is None:
+        description = ""
+    identifiedDescriptionName = [description]
     return identifiedDescriptionName
 
 
 # Derives slotCount from the item entry
-def get_slotCount(item_entry)
+def get_slotCount(item_entry):
+    slot = item_entry["slot"]
+    if slot is None:
+        slot = 0
+    slotCount = slot
     return slotCount
 
 
 # Derives ClassNum from the item entry
-def get_ClassNum(item_entry)
+def get_ClassNum(item_entry):
+    view_id = item_entry["view_id"]
+    if view_id is None:
+        ClassNum = 0
+    else:
+        ClassNum = view_id
     return ClassNum
-
 
 
 # Takes in a dictionary and creates a list of headers for a csv file
