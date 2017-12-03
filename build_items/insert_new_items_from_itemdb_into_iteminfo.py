@@ -46,8 +46,7 @@ def main():
     #################################################################
     # 2. Parse in item_db, formulate an item dictionary             #
     #################################################################
-    itemdb_dir = repo_dir + "/eRODev/rAthena Files/db/import/ero_item_db/item_db.txt"
-    item_db = parse_item_db(file_dir=itemdb_dir, item_db={})
+    itemdb_dir = repo_dir + "/eRODev/"
     #################################################################
     # 3. Insert entries that do not exist iteminfo.lua from item_db #
     #################################################################
@@ -121,7 +120,7 @@ def parse_item_info_lua(file_dir, item_dict, encoding):
                 key = key_value_list[0].strip().replace("\n", "")
 
                 # value
-                value = key_value_list[1].strip().replace("\n", "").replace("}", "").replace("{", "")
+                value = key_value_list[1].strip().replace("\n", "")
                 if value[-1:] == ",":  # removes trialing comma
                     # if there is a trailing comma, remove it
                     value = value[:-1]
@@ -131,7 +130,7 @@ def parse_item_info_lua(file_dir, item_dict, encoding):
             elif is_multi_line_embed_key.match(line):
                 # if it's the start of a multi line embed, create an embedded dictionary with a list
                 # as it's value
-                key = line.split("=")[0].strip
+                key = line.split("=")[0].strip()
                 item_dict[current_item_id][key] = []
                 current_embed_key = key
             elif is_multi_line_embed_value.match(line):
@@ -173,18 +172,17 @@ def parse_item_info_lua(file_dir, item_dict, encoding):
 
 # Tells the user in the console what file is currently being opened.
 def print_opening_dir(file_dir):
-    max_length = 30
-    if len(file_dir) > max_length:
-        filename = "..." + file_dir[-max_length:]
-    else:
-        filename = file_dir
-    print("Opening: " + filename)
+    file_dir_split = file_dir.split("/")
+    filename = file_dir_split[-1]
+    file_path = file_dir_split[:-1]
+    print("Opening: " + filename + " | From: " + "/".join(file_path))
 
 
 # Tells the user how many lines were writte to a file
 def print_writing_status(counter, file_dir):
     filename = file_dir.split("/")[-1]
     print("Found... " + str(counter) + " items in " + filename + "\n")
+
 
 # Writes an iteminfo lua and from a 3 element dictionary parameter [1]<lua_parts> whoses keys are
 # beg, mid, and end.
@@ -213,10 +211,10 @@ def write_lua_items_to_lua(file_dir, lua_parts, encoding):
     for item_id in lua_dict_keys:
         item_id = str(item_id)
         f.write(tab + "[" + item_id + "] = {\n")
-        for item_key in sorted(lua_dict[item_id]):
+        for item_key in lua_dict[item_id]:
             if isinstance(lua_dict[item_id][item_key], list):
 
-                multi_line_embed_str = tab * 2 + item_key + " = {\n"
+                multi_line_embed_str = tab * 2 + str(item_key) + " = {\n"
 
                 for item in lua_dict[item_id][item_key]:
                     multi_line_embed_str += tab * 3 + item + ",\n"
@@ -246,54 +244,6 @@ def scan_headers(dictionary, name_of_pk):
             if attribute not in headers:
                 headers.append(attribute)
     return headers
-
-# derives unidentifiedDisplayName from the item_db
-def get_unidentifiedDisplayName(item_entry):
-    # if it's not a weapon or an armor, keep the name the same
-    #   when unidentified since it kind of doesn't matter
-    unidentifiedDisplayName = item_entry["display_name"]
-    return unidentifiedDisplayName
-
-# derives unidentifiedResourceName from the item_db
-def get_unidentifiedResourceName(item_entry):
-    
-    return unidentifiedResourceName
-
-
-# derives unidentifiedDescriptionName from the item_db
-def get_unidentifiedDescriptionName(item_entry):
-    
-    return unidentifiedDescriptionName
-
-
-# derives identifiedDisplayName from the item_db
-def get_identifiedDisplayName(item_entry):
-    
-    return identifiedDisplayName
-
-
-# derives identifiedResourceName from the item_db
-def get_identifiedResourceName(item_entry):
-    
-    return identifiedResourceName
-
-
-# derives identifiedDescriptionName from the item_db
-def get_identifiedDescriptionName(item_entry):
-    
-    return identifiedDescriptionName
-
-
-# derives slotCount from the item_db
-def get_slotCount(item_entry):
-    
-    return slotCount
-
-
-# derives ClassNum from the item_db
-def get_ClassNum(item_entry):
-    
-    return ClassNum
 
 
 main()
