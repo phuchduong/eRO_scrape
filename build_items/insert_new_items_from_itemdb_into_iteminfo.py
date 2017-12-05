@@ -58,7 +58,7 @@ def main():
         file_dir=new_lua_dir,
         lua_parts=iteminfo_lua,
         encoding=get_encoding(language="eur"))
-    input("Script complete. Press ny key to close.")
+    input("Script complete. Press any key to close.")
 
 
 # Parses an iteminfo lua and returns a 3 element dictionary whoses keys are
