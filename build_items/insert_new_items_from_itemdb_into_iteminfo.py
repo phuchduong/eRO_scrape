@@ -15,10 +15,6 @@ import openpyxl  # excel plugin
 
 
 def main():
-    # for a list of valid codecs:
-    #     essencero_restoration\Lua Codecs.xlsx
-    # 437 is english codec
-    encoding = "850"
 
     ###############
     # file system #
@@ -43,7 +39,7 @@ def main():
     iteminfo_lua = parse_item_info_lua(
         file_dir=iteminfo_dir,
         item_dict={},
-        encoding=encoding)
+        encoding=get_encoding(language="eur"))
     #################################################################
     # 2. Parse in item_db, formulate an item dictionary             #
     #################################################################
@@ -58,7 +54,11 @@ def main():
     # 4. Write out the item dictionary to a new iteminfo.lua        #
     #################################################################
     new_lua_dir = repo_dir + "/eRODev/eRO Client Data/system/new_itemInfosryx.lub"
-    write_lua_items_to_lua(file_dir=new_lua_dir, lua_parts=iteminfo_lua, encoding=encoding)
+    write_lua_items_to_lua(
+        file_dir=new_lua_dir,
+        lua_parts=iteminfo_lua,
+        encoding=get_encoding(language="eur"))
+    input("Script complete. Press ny key to close.")
 
 
 # Parses an iteminfo lua and returns a 3 element dictionary whoses keys are
@@ -258,7 +258,7 @@ def parse_reconciliation_spreadsheet(file_dir):
     c_item_id = 9
     # 10  item key
     c_item_name = 11
-    # 12  type
+    c_type_code = 12
     # 13  price
     # 14  sell
     # 15  weight
@@ -280,29 +280,37 @@ def parse_reconciliation_spreadsheet(file_dir):
     # 31  Concat
     item_dict = {}
     for i in range(2, ex_sheet.max_row + 1):
-        type_name = ex_sheet.cell(row=i, column=c_type_name).value
-        description = ex_sheet.cell(row=i, column=c_description).value
-        sprite = ex_sheet.cell(row=i, column=c_sprite).value
         item_id = ex_sheet.cell(row=i, column=c_item_id).value
-        item_name = ex_sheet.cell(row=i, column=c_item_name).value
-        slot = ex_sheet.cell(row=i, column=c_slot).value
-        view_id = ex_sheet.cell(row=i, column=c_view_id).value
-
         item_dict[item_id] = {
-            "type_name": type_name,
-            "description": description,
-            "sprite": sprite,
-            "item_name": item_name,
-            "slot": slot,
-            "view_id": view_id,
+            "type_name": ex_sheet.cell(row=i, column=c_type_name).value,
+            "description": ex_sheet.cell(row=i, column=c_description).value,
+            "sprite": ex_sheet.cell(row=i, column=c_sprite).value,
+            "item_name": ex_sheet.cell(row=i, column=c_item_name).value,
+            "type_code": ex_sheet.cell(row=i, column=c_type_code).value,
+            "slot": ex_sheet.cell(row=i, column=c_slot).value,
+            "view_id": ex_sheet.cell(row=i, column=c_view_id).value,
         }
     return item_dict
+
+
+# for a list of valid codecs:
+#     essencero_restoration\Lua Codecs.xlsx
+# Python encldoing lists: https://docs.python.org/2.4/lib/standard-encodings.html
+def get_encoding(language):
+    # 437 is english codec
+    # euckr is Korean
+    encoding_dict = {
+        "eur": "850",
+        "eng": "437",
+        "kor": "euckr",
+    }
+    return encoding_dict[language]
 
 
 # Adds to the lua db, entries that do not exist in the lua db
 # from the recon db.
 def insert_new_items_into_lua_db(lua_db, recon_db):
-    skipped = []
+    modified = []
     inserted = []
     error = []
     for item_id in recon_db:
@@ -310,13 +318,22 @@ def insert_new_items_into_lua_db(lua_db, recon_db):
         if item_id_str in lua_db:
             # Item already exists in the iteminfo
             # In the future, use this area to override bad descriptions
-            skipped.append(item_id)
+            item_entry = recon_db[item_id]
+            lua_db[item_id_str]["unidentifiedDisplayName"] = get_unidentifiedDisplayName(item_entry=item_entry)
+            lua_db[item_id_str]["unidentifiedResourceName"] = get_identifiedResourceName(item_entry=item_entry)
+            lua_db[item_id_str]["unidentifiedDescriptionName"] = get_unidentifiedDescriptionName(item_entry=item_entry)
+            lua_db[item_id_str]["identifiedDisplayName"] = get_identifiedDisplayName(item_entry=item_entry)
+            lua_db[item_id_str]["identifiedResourceName"] = get_identifiedResourceName(item_entry=item_entry)
+            # lua_db[item_id_str]["identifiedDescriptionName"] = get_identifiedDescriptionName(item_entry=item_entry)
+            lua_db[item_id_str]["slotCount"] = get_slotCount(item_entry=item_entry)
+            lua_db[item_id_str]["ClassNum"] = get_ClassNum(item_entry=item_entry)
+            modified.append(item_id)
         elif item_id_str not in lua_db:
             # Insert new items into the item description
             item_entry = recon_db[item_id]
             lua_db[item_id_str] = {
                 "unidentifiedDisplayName": get_unidentifiedDisplayName(item_entry=item_entry),
-                "unidentifiedResourceName": get_unidentifiedResourceName(item_entry=item_entry),
+                "unidentifiedResourceName": get_identifiedResourceName(item_entry=item_entry),
                 "unidentifiedDescriptionName": get_unidentifiedDescriptionName(item_entry=item_entry),
                 "identifiedDisplayName": get_identifiedDisplayName(item_entry=item_entry),
                 "identifiedResourceName": get_identifiedResourceName(item_entry=item_entry),
@@ -327,11 +344,11 @@ def insert_new_items_into_lua_db(lua_db, recon_db):
             inserted.append(item_id)
         else:
             error.append(item_id)
-    skipped = sorted(skipped)
+    modified = sorted(modified)
     inserted = sorted(inserted)
     error = sorted(error)
     print("Insertion status:")
-    print("Skipped: " + ",".join(str(x) for x in skipped))
+    print("Modified: " + ",".join(str(x) for x in modified))
     print("Inserted: " + ",".join(str(x) for x in inserted))
     print("Error: " + ",".join(str(x) for x in error))
     return lua_db
@@ -346,13 +363,30 @@ def get_unidentifiedDisplayName(item_entry):
 
 
 # Derives unidentifiedResourceName from the item entry
-def get_unidentifiedResourceName(item_entry):
-    card_sprite_str = '"ÀÌ¸§¾ø´ÂÄ«µå"'
-    if item_entry["type_name"] == "Card":
-        unidentifiedResourceName = card_sprite_str
-    else:
-        unidentifiedResourceName = '"' + item_entry["sprite"] + '"'
-    return unidentifiedResourceName
+# def get_unidentifiedResourceName(item_entry):
+#     # Item Type codes
+#     # 0   Healing item.
+#     # 2   Usable item.
+#     # 3   Etc item
+#     # 4   Armor/Garment/Boots/Headgear/Accessory
+#     # 5   Weapon
+#     # 6   Card
+#     # 7   Pet egg
+#     # 8   Pet equipment
+#     # 10  Ammo (Arrows/Bullets/etc)
+#     # 11  Usable with delayed consumption (intended for 'itemskill')
+#     #     Items using the 'itemskill' script command are consumed after
+#     #     selecting a target. Any other command will NOT consume the item.
+#     # 12  Shadow Equipment
+#     # 18  Another delayed consume that requires user confirmation before
+#     #     using item.
+#     if item_entry["type_code"] == 6:
+#         # if it's a card
+#         card_sprite_str = '"ÀÌ¸§¾ø´ÂÄ«µå"'
+#         unidentifiedResourceName = card_sprite_str
+#     else:
+#         unidentifiedResourceName = '"' + item_entry["sprite"] + '"'
+#     return unidentifiedResourceName
 
 
 # Derives unidentifiedDescriptionName from the item entry
@@ -369,8 +403,26 @@ def get_identifiedDisplayName(item_entry):
 
 # Derives identifiedResourceName from the item entry
 def get_identifiedResourceName(item_entry):
-    card_sprite_str = '"ÀÌ¸§¾ø´ÂÄ«µå"'
-    if item_entry["type_name"] == "Card":
+    # Item Type codes
+    # 0   Healing item.
+    # 2   Usable item.
+    # 3   Etc item
+    # 4   Armor/Garment/Boots/Headgear/Accessory
+    # 5   Weapon
+    # 6   Card
+    # 7   Pet egg
+    # 8   Pet equipment
+    # 10  Ammo (Arrows/Bullets/etc)
+    # 11  Usable with delayed consumption (intended for 'itemskill')
+    #     Items using the 'itemskill' script command are consumed after
+    #     selecting a target. Any other command will NOT consume the item.
+    # 12  Shadow Equipment
+    # 18  Another delayed consume that requires user confirmation before
+    #     using item.
+    # print(item_entry["type_code"])
+    if item_entry["type_code"] == 6:
+        # if it's a card
+        card_sprite_str = '"ÀÌ¸§¾ø´ÂÄ«µå"'
         identifiedResourceName = card_sprite_str
     else:
         identifiedResourceName = '"' + item_entry["sprite"] + '"'
@@ -406,7 +458,6 @@ def get_ClassNum(item_entry):
         ClassNum = view_id
     return ClassNum
 
-
 # Takes in a dictionary and creates a list of headers for a csv file
 # based upon all keys inside of the dictionary.
 # Params:
@@ -425,3 +476,4 @@ def scan_headers(dictionary, name_of_pk):
 
 
 main()
+

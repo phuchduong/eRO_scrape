@@ -24,7 +24,7 @@ target_sheet = "export"
 
 ex_sheet = excel.get_sheet_by_name(target_sheet)
 
-column = ex_sheet["AD"]
+column = ex_sheet["AE"]
 new_entry = {}
 for cell in column:
     row = cell.value
