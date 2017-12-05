@@ -131,6 +131,9 @@ def parse_item_info_lua(file_dir, item_dict, encoding):
 
                 # adds key and value to the current item dict
                 item_dict[current_item_id][key] = value
+
+                # if key == 'identifiedResourceName' and current_item_id == '4131':
+                #     print(line)
             elif is_multi_line_embed_key.match(line):
                 # if it's the start of a multi line embed, create an embedded dictionary with a list
                 # as it's value
@@ -419,10 +422,10 @@ def get_identifiedResourceName(item_entry):
     # 12  Shadow Equipment
     # 18  Another delayed consume that requires user confirmation before
     #     using item.
-    # print(item_entry["type_code"])
-    if item_entry["type_code"] == 6:
+    if item_entry["type_code"] == 6 or item_entry["type_code"] == '6':
         # if it's a card
-        card_sprite_str = '"ÀÌ¸§¾ø´ÂÄ«µå"'
+        # card_sprite_str = '"ÀÌ¸§¾ø´ÂÄ«µå"'
+        card_sprite_str = '"└╠©º¥°┤┬─½ÁÕ"'
         identifiedResourceName = card_sprite_str
     else:
         identifiedResourceName = '"' + item_entry["sprite"] + '"'
@@ -458,6 +461,7 @@ def get_ClassNum(item_entry):
         ClassNum = view_id
     return ClassNum
 
+
 # Takes in a dictionary and creates a list of headers for a csv file
 # based upon all keys inside of the dictionary.
 # Params:
@@ -476,4 +480,3 @@ def scan_headers(dictionary, name_of_pk):
 
 
 main()
-
