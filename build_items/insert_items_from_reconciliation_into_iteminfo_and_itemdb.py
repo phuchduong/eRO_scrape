@@ -29,10 +29,10 @@ def main():
     # 1. Parse in iteminfo.lua, formulate an item dictionary               #
     ########################################################################
     iteminfo_dir = repo_dir + "/eRODev/eRO Client Data/system/itemInfosryx.lub"
-    # iteminfo_lua = parse_item_info_lua(
-    #     file_dir=iteminfo_dir,
-    #     item_dict={},  # designating a new dictionary
-    #     encoding=get_encoding(language="eur"))
+    iteminfo_lua = parse_item_info_lua(
+        file_dir=iteminfo_dir,
+        item_dict={},  # designating a new dictionary
+        encoding=get_encoding(language="eur"))
 
     ########################################################################
     # 2. Parse in reconciliation spreadsheet, formulate an item dictionary #
@@ -54,17 +54,17 @@ def main():
     ########################################################################
     # 4. Insert entries that do not exist iteminfo.lua from recon_db       #
     ########################################################################
-    # iteminfo_lua["iteminfo_db"] = insert_new_items_into_lua_db(
-    #     lua_db=iteminfo_lua["iteminfo_db"], recon_db=recon_db)
+    iteminfo_lua["iteminfo_db"] = insert_new_items_into_lua_db(
+        lua_db=iteminfo_lua["iteminfo_db"], recon_db=recon_db)
 
     ########################################################################
     # 5. Write out the item dictionary to a new iteminfo.lua               #
     ########################################################################
     new_lua_dir = repo_dir + "/eRODev/eRO Client Data/system/new_itemInfosryx.lub"
-    # write_lua_items_to_lua(
-    #     file_dir=new_lua_dir,
-    #     lua_parts=iteminfo_lua,
-    #     encoding=get_encoding(language="eur"))
+    write_lua_items_to_lua(
+        file_dir=new_lua_dir,
+        lua_parts=iteminfo_lua,
+        encoding=get_encoding(language="eur"))
 
     #######################################################################
     # End of script                                                       #
