@@ -20,44 +20,55 @@ def main():
     # file system #
     ###############
 
-    # your repo directory should look like this
-    #
-    # /repo root (essencero_restoration)
-    #   \web_scrape_tamsinwhitfield
-    #       /old_essence_item_db.txt
-    #   \web_scrape_web_archive
-    #       /item_db_web_archive.tsv
     if isdir("C:/repos"):
         repo_dir = "C:/repos"
     elif isdir("D:/repos"):
         repo_dir = "D:/repos"  # change this to your own
 
-    #################################################################
-    # 1. Parse in iteminfo.lua, formulate an item dictionary        #
-    #################################################################
+    ########################################################################
+    # 1. Parse in iteminfo.lua, formulate an item dictionary               #
+    ########################################################################
     iteminfo_dir = repo_dir + "/eRODev/eRO Client Data/system/itemInfosryx.lub"
-    iteminfo_lua = parse_item_info_lua(
-        file_dir=iteminfo_dir,
-        item_dict={},
-        encoding=get_encoding(language="eur"))
-    #################################################################
-    # 2. Parse in item_db, formulate an item dictionary             #
-    #################################################################
+    # iteminfo_lua = parse_item_info_lua(
+    #     file_dir=iteminfo_dir,
+    #     item_dict={},  # designating a new dictionary
+    #     encoding=get_encoding(language="eur"))
+
+    ########################################################################
+    # 2. Parse in reconciliation spreadsheet, formulate an item dictionary #
+    ########################################################################
     recon_dir = repo_dir + "/essencero_restoration/item_db_to_reconciliation/reconciliation.xlsx"
     recon_db = parse_reconciliation_spreadsheet(file_dir=recon_dir)
-    #################################################################
-    # 3. Insert entries that do not exist iteminfo.lua from item_db #
-    #################################################################
-    iteminfo_lua["iteminfo_db"] = insert_new_items_into_lua_db(
-        lua_db=iteminfo_lua["iteminfo_db"], recon_db=recon_db)
-    #################################################################
-    # 4. Write out the item dictionary to a new iteminfo.lua        #
-    #################################################################
+
+    ########################################################################
+    # 3a. Insert items into item_db from reconciliation db                 #
+    ########################################################################
+    old_ero_item_db_dir = repo_dir + "/eRODev/rAthena Files/db/import/ero_item_db/item_db.txt"
+    new_ero_item_db_dir = repo_dir + "/eRODev/rAthena Files/db/import/ero_item_db/item_db_new.txt"
+    # print_missing_item_ids(file_dir=old_ero_item_db_dir, new_item_dict={})
+    override_item_db_by_reconciliation(
+        old_item_db_dir=old_ero_item_db_dir,
+        recon_db=recon_db,
+        new_item_db_dir=new_ero_item_db_dir)
+
+    ########################################################################
+    # 4. Insert entries that do not exist iteminfo.lua from recon_db       #
+    ########################################################################
+    # iteminfo_lua["iteminfo_db"] = insert_new_items_into_lua_db(
+    #     lua_db=iteminfo_lua["iteminfo_db"], recon_db=recon_db)
+
+    ########################################################################
+    # 5. Write out the item dictionary to a new iteminfo.lua               #
+    ########################################################################
     new_lua_dir = repo_dir + "/eRODev/eRO Client Data/system/new_itemInfosryx.lub"
-    write_lua_items_to_lua(
-        file_dir=new_lua_dir,
-        lua_parts=iteminfo_lua,
-        encoding=get_encoding(language="eur"))
+    # write_lua_items_to_lua(
+    #     file_dir=new_lua_dir,
+    #     lua_parts=iteminfo_lua,
+    #     encoding=get_encoding(language="eur"))
+
+    #######################################################################
+    # End of script                                                       #
+    #######################################################################
     input("Script complete. Press any key to close.")
 
 
@@ -280,7 +291,7 @@ def parse_reconciliation_spreadsheet(file_dir):
     # 28  { Script }
     # 29  { OnEquip_Script }
     # 30  { OnUnequip_Script }
-    # 31  Concat
+    c_concat = 31
     item_dict = {}
     for i in range(2, ex_sheet.max_row + 1):
         item_id = ex_sheet.cell(row=i, column=c_item_id).value
@@ -292,6 +303,7 @@ def parse_reconciliation_spreadsheet(file_dir):
             "type_code": ex_sheet.cell(row=i, column=c_type_code).value,
             "slot": ex_sheet.cell(row=i, column=c_slot).value,
             "view_id": ex_sheet.cell(row=i, column=c_view_id).value,
+            "concat": ex_sheet.cell(row=i, column=c_concat).value,
         }
     return item_dict
 
@@ -477,6 +489,72 @@ def scan_headers(dictionary, name_of_pk):
             if attribute not in headers:
                 headers.append(attribute)
     return headers
+
+
+# Prints out differences in items between the the old item_db.txt
+# and the reconconciliation_db
+def print_missing_item_ids(file_dir, new_item_dict):
+    #########################
+    # build item dictionary #
+    #########################
+    item_line_pattern = "^(//)?\d{5,5},.{0,}$\n"
+    line_has_item = re.compile(item_line_pattern)
+    item_db_dict = {}
+    with open(file=file_dir, mode="r") as f:
+        for line in f:
+            if line_has_item.match(line):
+                line_split = line.split(",")
+                item_id = int(line_split[0].replace("//", ""))
+                if item_id >= 45000:
+                    item_db_dict[item_id] = line
+
+    ####################
+    # print duplicates #
+    ####################
+    duplicates = []
+    seen_dict = []
+    for item_id in item_db_dict:
+        item_id = str(item_id)
+        if item_id in seen_dict:
+            duplicates.append(item_id)
+        else:
+            seen_dict.append(item_id)
+    print("Duplicates found in old ero item_db.txt: " + ",".join(duplicates))
+
+
+# Generates a new_item_db.txt from an item_db.txt, where a reconciliation
+#   spreadsheet is used to override the entries and udpate each row.
+def override_item_db_by_reconciliation(old_item_db_dir, recon_db, new_item_db_dir):
+    print_opening_dir(file_dir=old_item_db_dir)
+    item_line_pattern = "^(//)?\d{5,5},.{0,}$\n"
+    line_has_item = re.compile(item_line_pattern)
+    new_file = open(file=new_item_db_dir, mode="w+")
+    counter = 0
+    with open(file=old_item_db_dir, mode="r") as old_file:
+        for line in old_file:
+            if line_has_item.match(line):
+                line_split = line.split(",")
+                line_item_id = int(line_split[0].replace("//", ""))
+                if line_item_id >= 45000 and line_item_id in recon_db:  # eRO items start at 45000
+                    # start of eRO items
+                    # if it's the same item
+                    # recon overrides if it's the same item
+                    # but check to see if it's commented out first
+                    output_line = ""
+                    if line[:2] == "//":
+                        output_line += "//"
+                    output_line += recon_db[line_item_id]["concat"] + "\n"
+                    new_file.write(output_line)
+                    counter += 1
+                    # print("Overriding in new_item_db: " + str(recon_item_id))
+                else:
+                    new_file.write(line)
+                    counter += 1
+            else:
+                new_file.write(line)
+                counter += 1
+    new_file.close()
+    print_writing_status(file_dir=new_item_db_dir, counter=counter)
 
 
 main()
