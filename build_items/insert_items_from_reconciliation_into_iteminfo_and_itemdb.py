@@ -530,11 +530,13 @@ def override_item_db_by_reconciliation(old_item_db_dir, recon_db, new_item_db_di
     line_has_item = re.compile(item_line_pattern)
     new_file = open(file=new_item_db_dir, mode="w+")
     counter = 0
+    old_item_db_list = []
     with open(file=old_item_db_dir, mode="r") as old_file:
         for line in old_file:
             if line_has_item.match(line):
                 line_split = line.split(",")
                 line_item_id = int(line_split[0].replace("//", ""))
+                old_item_db_list.append(line_item_id)
                 if line_item_id >= 45000 and line_item_id in recon_db:  # eRO items start at 45000
                     # start of eRO items
                     # if it's the same item
@@ -546,7 +548,6 @@ def override_item_db_by_reconciliation(old_item_db_dir, recon_db, new_item_db_di
                     output_line += recon_db[line_item_id]["concat"] + "\n"
                     new_file.write(output_line)
                     counter += 1
-                    # print("Overriding in new_item_db: " + str(recon_item_id))
                 else:
                     new_file.write(line)
                     counter += 1
@@ -555,6 +556,10 @@ def override_item_db_by_reconciliation(old_item_db_dir, recon_db, new_item_db_di
                 counter += 1
     new_file.close()
     print_writing_status(file_dir=new_item_db_dir, counter=counter)
+
+    for recon_item_id in recon_db:
+        if recon_item_id not in old_item_db_list:
+            print("Missing from item_db.txt|" + recon_db[recon_item_id]["concat"])
 
 
 main()
