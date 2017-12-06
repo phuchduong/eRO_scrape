@@ -1,10 +1,16 @@
 #!/usr/bin/env python.
 '''
-    File name: insert_new_items_from_itemdb_into_iteminfo.py
-    Date created: December 2, 2017
+    File name: build_items.py
+    Date created: December 6, 2017
     Python version: 3.6.1
     Purpose:
-        Inserts item_db entries that do not exist in the iteminfo.lua
+        Generates a new:
+            1. iteminfo.lua
+            2. item_db.txt
+            3. accname.lua
+            4. accessoryname.lua
+        By cross referencing:
+            reconciliation.xlsx
     Author: Phuc H Duong
     Website: phuchduong.io
     Linkedin: https://www.linkedin.com/in/phuchduong/
