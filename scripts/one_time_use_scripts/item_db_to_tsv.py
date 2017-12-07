@@ -36,7 +36,7 @@ def item_db_to_tsv(in_dir, out_dir):
              "eLV[:maxLevel]\tRefineable\tView\t{ Script }\t{ OnEquip_Script }\t{ OnUnequip_Script }\n"
     out_f.write(header)
 
-    item_line_pattern = "^\d{5,5},.{0,}$\n"
+    item_line_pattern = "^\d{3,5},.{0,}$\n"
     line_has_item = re.compile(item_line_pattern)
 
     with open(file=in_dir, mode="r") as in_f:
@@ -47,7 +47,7 @@ def item_db_to_tsv(in_dir, out_dir):
                 new_entry = line[:script_start_index].replace(",", "\t")
 
                 script_split = line[script_start_index:].split(",{")
-                new_entry += "\t" + script_split[0]
+                new_entry += script_split[0]
                 new_entry += "\t" + script_split[0]
                 new_entry += "\t" + script_split[0]
                 out_f.write(new_entry + "\n")

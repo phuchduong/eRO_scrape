@@ -18,7 +18,7 @@
 import re  # regular expression
 from os.path import isdir   # checks to see if a folder exists
 import openpyxl  # excel plugin
-
+import subprocess as sp  # to open files in a text editor as a subprocess
 
 def main():
 
@@ -31,6 +31,8 @@ def main():
     elif isdir("D:/repos"):
         repo_dir = "D:/repos"  # change this to your own
 
+    encoding = "850"
+
     ########################################################################
     # 1. Parse in iteminfo.lua, formulate an item dictionary               #
     ########################################################################
@@ -38,12 +40,12 @@ def main():
     iteminfo_lua = parse_item_info_lua(
         file_dir=iteminfo_dir,
         item_dict={},  # designating a new dictionary
-        encoding=get_encoding(language="eur"))
+        encoding=encoding)
 
     ########################################################################
     # 2. Parse in reconciliation spreadsheet, formulate an item dictionary #
     ########################################################################
-    recon_dir = repo_dir + "/essencero_restoration/item_db_to_reconciliation/reconciliation.xlsx"
+    recon_dir = repo_dir + "/essencero_restoration/scripts/reconciliation.xlsx"
     recon_db = parse_reconciliation_spreadsheet(file_dir=recon_dir)
 
     ########################################################################
@@ -70,11 +72,14 @@ def main():
     write_lua_items_to_lua(
         file_dir=new_lua_dir,
         lua_parts=iteminfo_lua,
-        encoding=get_encoding(language="eur"))
+        encoding=encoding)
 
     #######################################################################
     # End of script                                                       #
     #######################################################################
+    # Opens the new lua in sublime text
+    program_dir = "C:\Program Files\Sublime Text 3\sublime_text.exe"
+    sp.Popen([program_dir, new_lua_dir])
     input("Script complete. Press any key to close.")
 
 
@@ -322,6 +327,7 @@ def get_encoding(language):
     # euckr is Korean
     encoding_dict = {
         "eur": "850",
+        "eur2": "cp1252",
         "eng": "437",
         "kor": "euckr",
     }
@@ -453,7 +459,7 @@ def get_identifiedResourceName(item_entry):
 # Derives identifiedDescriptionName from the item entry
 def get_identifiedDescriptionName(item_entry):
     description = item_entry["description"]
-    if description is None:
+    if description is None or description == "":
         identifiedDescriptionName = ['""']
     else:
         description = description.replace("\"", "\\\"")
@@ -464,7 +470,7 @@ def get_identifiedDescriptionName(item_entry):
 # Derives slotCount from the item entry
 def get_slotCount(item_entry):
     slot = item_entry["slot"]
-    if slot is None:
+    if slot is None or slot == "":
         slot = 0
     slotCount = slot
     return slotCount
@@ -473,7 +479,7 @@ def get_slotCount(item_entry):
 # Derives ClassNum from the item entry
 def get_ClassNum(item_entry):
     view_id = item_entry["view_id"]
-    if view_id is None:
+    if view_id is None or view_id == "":
         ClassNum = 0
     else:
         ClassNum = view_id
@@ -566,6 +572,5 @@ def override_item_db_by_reconciliation(old_item_db_dir, recon_db, new_item_db_di
     for recon_item_id in recon_db:
         if recon_item_id not in old_item_db_list:
             print("Missing from item_db.txt|" + recon_db[recon_item_id]["concat"])
-
 
 main()
