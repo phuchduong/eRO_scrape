@@ -20,6 +20,7 @@ from os.path import isdir   # checks to see if a folder exists
 import openpyxl  # excel plugin
 import subprocess as sp  # to open files in a text editor as a subprocess
 
+
 def main():
 
     ###############
@@ -48,9 +49,9 @@ def main():
     recon_dir = repo_dir + "/essencero_restoration/scripts/reconciliation.xlsx"
     recon_db = parse_reconciliation_spreadsheet(file_dir=recon_dir)
 
-    ########################################################################
-    # 3a. Insert items into item_db from reconciliation db                 #
-    ########################################################################
+    # ########################################################################
+    # # 3a. Insert items into item_db from reconciliation db                 #
+    # ########################################################################
     old_ero_item_db_dir = repo_dir + "/eRODev/rAthena Files/db/import/ero_item_db/item_db.txt"
     new_ero_item_db_dir = repo_dir + "/eRODev/rAthena Files/db/import/ero_item_db/item_db_new.txt"
     # print_missing_item_ids(file_dir=old_ero_item_db_dir, new_item_dict={})
@@ -59,24 +60,24 @@ def main():
         recon_db=recon_db,
         new_item_db_dir=new_ero_item_db_dir)
 
-    ########################################################################
-    # 4. Insert entries that do not exist iteminfo.lua from recon_db       #
-    ########################################################################
+    # ########################################################################
+    # # 4. Insert entries that do not exist iteminfo.lua from recon_db       #
+    # ########################################################################
     iteminfo_lua["iteminfo_db"] = insert_new_items_into_lua_db(
         lua_db=iteminfo_lua["iteminfo_db"], recon_db=recon_db)
 
-    ########################################################################
-    # 5. Write out the item dictionary to a new iteminfo.lua               #
-    ########################################################################
+    # ########################################################################
+    # # 5. Write out the item dictionary to a new iteminfo.lua               #
+    # ########################################################################
     new_lua_dir = repo_dir + "/eRODev/eRO Client Data/system/new_itemInfosryx.lub"
     write_lua_items_to_lua(
         file_dir=new_lua_dir,
         lua_parts=iteminfo_lua,
         encoding=encoding)
 
-    #######################################################################
-    # End of script                                                       #
-    #######################################################################
+    # #######################################################################
+    # # End of script                                                       #
+    # #######################################################################
     # Opens the new lua in sublime text
     program_dir = "C:\Program Files\Sublime Text 3\sublime_text.exe"
     sp.Popen([program_dir, new_lua_dir])
@@ -271,51 +272,31 @@ def parse_reconciliation_spreadsheet(file_dir):
     target_sheet = "export"
 
     ex_sheet = excel.get_sheet_by_name(target_sheet)
-    # Column reference
-    c_type_name = 1
-    # 2   Allowed Jobs
-    # 3   Classes_String
-    # 4   gender
-    # 5   Loc
-    c_description = 6
-    c_sprite = 7
-    # 8   old_id
-    c_item_id = 9
-    # 10  item key
-    c_item_name = 11
-    c_type_code = 12
-    # 13  price
-    # 14  sell
-    # 15  weight
-    # 16  ATK[:MATK]
-    # 17  DEF
-    # 18  Range
-    c_slot = 19
-    # 20  Job
-    # 21  Class
-    # 22  Gender
-    # 23  Loc
-    # 24  wLV
-    # 25  eLV[:maxLevel]
-    # 26  Refineable
-    c_view_id = 27
-    # 28  { Script }
-    # 29  { OnEquip_Script }
-    # 30  { OnUnequip_Script }
-    c_concat = 31
+
+    # Builds column index
+    header_index = {}
+    for i in range(1, ex_sheet.max_column + 1):
+        value = ex_sheet.cell(row=1, column=i).value
+        if value is not None:
+            header_index[value] = i
+    # # For debugging, print headers that were found
+    # for header in header_index:
+    #     print("Header: " + str(header) + (" " * (20-len(header))) + "column: " + str(header_index[header]))
     item_dict = {}
     for i in range(2, ex_sheet.max_row + 1):
-        item_id = ex_sheet.cell(row=i, column=c_item_id).value
-        item_dict[item_id] = {
-            "type_name": ex_sheet.cell(row=i, column=c_type_name).value,
-            "description": ex_sheet.cell(row=i, column=c_description).value,
-            "sprite": ex_sheet.cell(row=i, column=c_sprite).value,
-            "item_name": ex_sheet.cell(row=i, column=c_item_name).value,
-            "type_code": ex_sheet.cell(row=i, column=c_type_code).value,
-            "slot": ex_sheet.cell(row=i, column=c_slot).value,
-            "view_id": ex_sheet.cell(row=i, column=c_view_id).value,
-            "concat": ex_sheet.cell(row=i, column=c_concat).value,
-        }
+        item_id = ex_sheet.cell(row=i, column=header_index["item_id"]).value
+        item_dict[item_id] = {}
+        for header_name in header_index:
+            if header_name != "item_id":
+                item_dict[item_id][header_name] = ex_sheet.cell(row=i, column=header_index[header_name]).value
+        print(item_dict[item_id]["item_name"])
+    # For debugging, prints sample data out from the item dict
+    # for item_id in item_dict:
+    #     print(
+    #         str(item_id) + "," +
+    #         str(item_dict[item_id]["item_name"]) + "," +
+    #         str(item_dict[item_id]["spr_name"]) + "," +
+    #         str(item_dict[item_id]["view_id"]))
     return item_dict
 
 
@@ -351,7 +332,10 @@ def insert_new_items_into_lua_db(lua_db, recon_db):
             lua_db[item_id_str]["unidentifiedDescriptionName"] = get_unidentifiedDescriptionName(item_entry=item_entry)
             lua_db[item_id_str]["identifiedDisplayName"] = get_identifiedDisplayName(item_entry=item_entry)
             lua_db[item_id_str]["identifiedResourceName"] = get_identifiedResourceName(item_entry=item_entry)
-            # lua_db[item_id_str]["identifiedDescriptionName"] = get_identifiedDescriptionName(item_entry=item_entry)
+            description = get_identifiedDescriptionName(item_entry=item_entry)
+            for sentence in lua_db[item_id_str]["identifiedDescriptionName"]:
+                description.append(sentence)
+            lua_db[item_id_str]["identifiedDescriptionName"] = description
             lua_db[item_id_str]["slotCount"] = get_slotCount(item_entry=item_entry)
             lua_db[item_id_str]["ClassNum"] = get_ClassNum(item_entry=item_entry)
             modified.append(item_id)
@@ -446,13 +430,13 @@ def get_identifiedResourceName(item_entry):
     # 12  Shadow Equipment
     # 18  Another delayed consume that requires user confirmation before
     #     using item.
-    if item_entry["type_code"] == 6 or item_entry["type_code"] == '6':
+    if item_entry["type"] == 6 or item_entry["type"] == '6':
         # if it's a card
         # card_sprite_str = '"ÀÌ¸§¾ø´ÂÄ«µå"'
         card_sprite_str = '"└╠©º¥°┤┬─½ÁÕ"'
         identifiedResourceName = card_sprite_str
     else:
-        identifiedResourceName = '"' + item_entry["sprite"] + '"'
+        identifiedResourceName = '"' + item_entry["spr_name"] + '"'
     return identifiedResourceName
 
 
