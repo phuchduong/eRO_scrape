@@ -19,6 +19,7 @@ import re  # regular expression
 from os.path import isdir   # checks to see if a folder exists
 import openpyxl  # excel plugin
 import subprocess as sp  # to open files in a text editor as a subprocess
+from shutil import copyfile # for moving files
 
 
 def main():
@@ -78,9 +79,20 @@ def main():
     # #######################################################################
     # # End of script                                                       #
     # #######################################################################
-    # Opens the new lua in sublime text
+    # Opens the new iteminfo.lua and item_dbtxt in sublime text
     program_dir = "C:\Program Files\Sublime Text 3\sublime_text.exe"
     sp.Popen([program_dir, new_lua_dir])
+    sp.Popen([program_dir, new_ero_item_db_dir])
+
+    # places the new iteminfo into local ragnarok folder for testing on client side
+    game_dir = "D:/games/Ragnarok/Gravity/kRO/System"
+    if isdir(game_dir):
+        src = new_lua_dir
+        dst = game_dir + "/itemInfosryx.lub"
+        print("Copying new lua to..." + dst)
+        copyfile(src, dst)
+        sp.Popen(r'explorer /select,"' + game_dir.replace("/", "\\") + '"')
+
     input("Script complete. Press any key to close.")
 
 
@@ -368,6 +380,7 @@ def insert_new_items_into_lua_db(lua_db, recon_db):
 # Derives unidentifiedDisplayName from the item entry
 def get_unidentifiedDisplayName(item_entry):
     # this is the name of the item they see when it is unidentified
+    print(str(item_entry["item_name"]))
     item_name = item_entry["item_name"]
     unidentifiedDisplayName = '"Unidentified ' + item_name + '"'
     return unidentifiedDisplayName
@@ -555,6 +568,7 @@ def override_item_db_by_reconciliation(old_item_db_dir, recon_db, new_item_db_di
 
     for recon_item_id in recon_db:
         if recon_item_id not in old_item_db_list:
-            print("Missing from item_db.txt|" + recon_db[recon_item_id]["concat"])
+            print("Missing from item_db.txt|" + str(recon_db[recon_item_id]["concat"]))
+
 
 main()

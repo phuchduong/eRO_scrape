@@ -69,7 +69,6 @@ def main():
         20508,  # Drooping Nora Stark
         20634,  # Drooping Okale
         20754,  # Drooping Paradox924X
-        20165,  # Drooping Pikachu
         20635,  # Drooping Praetor
         20558,  # Drooping Saproling
         20506,  # Drooping Skwipe
