@@ -19,7 +19,7 @@ import re  # regular expression
 from os.path import isdir   # checks to see if a folder exists
 import openpyxl  # excel plugin
 import subprocess as sp  # to open files in a text editor as a subprocess
-from shutil import copyfile # for moving files
+from shutil import copyfile  # for moving files
 
 
 def main():
@@ -34,6 +34,39 @@ def main():
         repo_dir = "D:/repos"  # change this to your own
 
     encoding = "850"
+
+    # List of item ids of items that are being left behind and not integrated into the new server.
+    # Treatment: These item should be skipped during the merge.
+    drop_list = [
+        45015,  # Drooping Aria
+        45233,  # drooping aria
+        # 20522,  # Drooping Aria Stark
+        # 20524,  # Drooping Biomaster
+        45167,  # Drooping Cebalrai
+        45511,  # Drooping Doctor Wyrd
+        45169,  # Drooping Eike
+        # 20525,  # Drooping Eileithyia
+        45235,  # Drooping Faustus
+        45170,  # Drooping Gazel
+        45171,  # Drooping Hidden
+        45162,  # Drooping Mokona
+        45163,  # Drooping Mulder
+        45358,  # Drooping Nora Stark
+        45236,  # Drooping Okale
+        45164,  # Drooping Paradox924X
+        45237,  # Drooping Praetor
+        45175,  # Drooping Saproling
+        45449,  # Drooping Skwipe
+        45469,  # Drooping Super Scope
+        45471,  # Drooping Takara
+        45478,  # Drooping Tony Stark
+        45490,  # Drooping Vhaidra
+        45178,  # Drooping Windii
+        45512,  # Drooping Xackery
+        45238,  # Drooping Yami
+        45520,  # Drooping Yosh
+        # 20581,  # Drooping Zhao
+    ]
 
     ########################################################################
     # 1. Parse in iteminfo.lua, formulate an item dictionary               #
@@ -59,7 +92,8 @@ def main():
     override_item_db_by_reconciliation(
         old_item_db_dir=old_ero_item_db_dir,
         recon_db=recon_db,
-        new_item_db_dir=new_ero_item_db_dir)
+        new_item_db_dir=new_ero_item_db_dir,
+        drop_list=drop_list)
 
     # ########################################################################
     # # 4. Insert entries that do not exist iteminfo.lua from recon_db       #
@@ -74,7 +108,8 @@ def main():
     write_lua_items_to_lua(
         file_dir=new_lua_dir,
         lua_parts=iteminfo_lua,
-        encoding=encoding)
+        encoding=encoding,
+        drop_list=drop_list)
 
     # #######################################################################
     # # End of script                                                       #
@@ -91,7 +126,7 @@ def main():
         dst = game_dir + "/itemInfosryx.lub"
         print("Copying new lua to..." + dst)
         copyfile(src, dst)
-        sp.Popen(r'explorer /select,"' + game_dir.replace("/", "\\") + '"')
+        sp.Popen(r'explorer /select,"D:\games\Ragnarok\Gravity\kRO\System"')
 
     input("Script complete. Press any key to close.")
 
@@ -234,7 +269,7 @@ def print_writing_status(counter, file_dir):
 # [0]<file_dir> is the full path of the file to be written
 # [2]<is_korean> can be True or False, true will specify encoding of ms949 for korean encoding
 #     while false will yeild utf-8 encoding
-def write_lua_items_to_lua(file_dir, lua_parts, encoding):
+def write_lua_items_to_lua(file_dir, lua_parts, encoding, drop_list):
     print_opening_dir(file_dir=file_dir)
 
     # file parts
@@ -251,23 +286,24 @@ def write_lua_items_to_lua(file_dir, lua_parts, encoding):
 
     lua_dict_keys = sorted([int(x) for x in lua_dict])
     for item_id in lua_dict_keys:
-        item_id = str(item_id)
-        f.write(tab + "[" + item_id + "] = {\n")
-        for item_key in lua_dict[item_id]:
-            if isinstance(lua_dict[item_id][item_key], list):
-                multi_line_embed_str = tab * 2 + str(item_key) + " = {\n"
+        if item_id not in drop_list:
+            item_id = str(item_id)
+            f.write(tab + "[" + item_id + "] = {\n")
+            for item_key in lua_dict[item_id]:
+                if isinstance(lua_dict[item_id][item_key], list):
+                    multi_line_embed_str = tab * 2 + str(item_key) + " = {\n"
 
-                if len(lua_dict[item_id][item_key][0]) > 2:
-                    for item in lua_dict[item_id][item_key]:
-                        multi_line_embed_str += tab * 3 + item + ",\n"
+                    if len(lua_dict[item_id][item_key][0]) > 2:
+                        for item in lua_dict[item_id][item_key]:
+                            multi_line_embed_str += tab * 3 + item + ",\n"
+                    else:
+                        multi_line_embed_str += tab * 3 + '"...Coming Soon..."' + ",\n"
+                    multi_line_embed_str += tab * 2 + "},\n"
+                    f.write(multi_line_embed_str)
                 else:
-                    multi_line_embed_str += tab * 3 + '"...Coming Soon..."' + ",\n"
-                multi_line_embed_str += tab * 2 + "},\n"
-                f.write(multi_line_embed_str)
-            else:
-                # Writes the key and value
-                f.write(tab * 2 + str(item_key) + " = " + str(lua_dict[item_id][item_key]) + ",\n")
-        f.write(tab + "},\n")
+                    # Writes the key and value
+                    f.write(tab * 2 + str(item_key) + " = " + str(lua_dict[item_id][item_key]) + ",\n")
+            f.write(tab + "},\n")
     f.write("}\n")
     f.write(lua_end)
     print("Writing " + str(len(lua_dict)) + " items to... " + file_dir)
@@ -533,7 +569,7 @@ def print_missing_item_ids(file_dir, new_item_dict):
 
 # Generates a new_item_db.txt from an item_db.txt, where a reconciliation
 #   spreadsheet is used to override the entries and udpate each row.
-def override_item_db_by_reconciliation(old_item_db_dir, recon_db, new_item_db_dir):
+def override_item_db_by_reconciliation(old_item_db_dir, recon_db, new_item_db_dir, drop_list):
     print_opening_dir(file_dir=old_item_db_dir)
     item_line_pattern = "^(//)?\d{5,5},.{0,}$\n"
     line_has_item = re.compile(item_line_pattern)
@@ -545,21 +581,23 @@ def override_item_db_by_reconciliation(old_item_db_dir, recon_db, new_item_db_di
             if line_has_item.match(line):
                 line_split = line.split(",")
                 line_item_id = int(line_split[0].replace("//", ""))
-                old_item_db_list.append(line_item_id)
-                if line_item_id >= 45000 and line_item_id in recon_db:  # eRO items start at 45000
-                    # start of eRO items
-                    # if it's the same item
-                    # recon overrides if it's the same item
-                    # but check to see if it's commented out first
-                    output_line = ""
-                    if line[:2] == "//":
-                        output_line += "//"
-                    output_line += recon_db[line_item_id]["concat"] + "\n"
-                    new_file.write(output_line)
-                    counter += 1
-                else:
-                    new_file.write(line)
-                    counter += 1
+                # drop items here
+                if line_item_id not in drop_list:
+                    old_item_db_list.append(line_item_id)
+                    if line_item_id >= 45000 and line_item_id in recon_db:  # eRO items start at 45000
+                        # start of eRO items
+                        # if it's the same item
+                        # recon overrides if it's the same item
+                        # but check to see if it's commented out first
+                        output_line = ""
+                        if line[:2] == "//":
+                            output_line += "//"
+                        output_line += recon_db[line_item_id]["concat"] + "\n"
+                        new_file.write(output_line)
+                        counter += 1
+                    else:
+                        new_file.write(line)
+                        counter += 1
             else:
                 new_file.write(line)
                 counter += 1
