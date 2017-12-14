@@ -12,7 +12,7 @@
 from os.path import isdir   # checks to see if a folder exists
 
 
-def main():
+def main(codec):
 
     ###############
     # file system #
@@ -34,10 +34,10 @@ def main():
     # 1. Parse in iteminfo.lua, formulate an item dictionary        #
     #################################################################
     iteminfo_dir = repo_dir + "/eRODev/eRO Client Data/system/itemInfosryx.lub"
-    item_id = 63267
-    print_line_from_file(file_dir=iteminfo_dir, line_num=item_id, encoding="850")
-    print_line_from_file(file_dir=iteminfo_dir, line_num=item_id + 1, encoding="850")
-    print_line_from_file(file_dir=iteminfo_dir, line_num=item_id + 13, encoding="850")
+    item_id = 36167
+    print_line_from_file(file_dir=iteminfo_dir, line_num=item_id, encoding=codec)
+    print_line_from_file(file_dir=iteminfo_dir, line_num=item_id + 1, encoding=codec)
+    print_line_from_file(file_dir=iteminfo_dir, line_num=item_id + 13, encoding=codec)
 
 
 # prints the specific line of a file
@@ -50,4 +50,49 @@ def print_line_from_file(file_dir, line_num, encoding):
                 print("Line Number " + str(counter) + ":" + line)
 
 
-main()
+codecs = [
+    "cp850",
+    "cp1252",
+    "latin_1",
+    "iso8859_3",
+    "iso8859_15",
+    "cp437",
+    "cp1256",
+    "cp1257",
+    "iso8859_2",
+    "iso8859_4",
+    "iso8859_5",
+    "iso8859_6",
+    "iso8859_7",
+    "iso8859_8",
+    "iso8859_9",
+    "iso8859_10",
+    "iso8859_13",
+    "iso8859_14",
+    "cp1250",
+    "cp1251",
+    "cp866",
+    "koi8_r",
+    "koi8_u",
+    "cp1253",
+    "cp1255",
+    "cp1254",
+    "cp1258",
+]
+works = []
+for codec in codecs:
+    try:
+        print("=====================================")
+        print("Trying Codec:" + codec)
+        print("=====================================")
+        main(codec=codec)
+        works.append(codec)
+    except (UnicodeDecodeError, UnicodeEncodeError) as e:
+        print("--------------------------------")
+        print("Error in codec: " + codec + ". Error: " + str(e))
+        print("--------------------------------")
+        pass
+print("--------------------------------")
+print("Script Finished-----------------")
+print("These codecs work:")
+print(",".join(works))

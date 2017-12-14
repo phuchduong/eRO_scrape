@@ -33,7 +33,7 @@ def main():
     elif isdir("D:/repos"):
         repo_dir = "D:/repos"  # change this to your own
 
-    encoding = "850"
+    encoding = "latin1"
 
     # List of item ids of items that are being left behind and not integrated into the new server.
     # Treatment: These item should be skipped during the merge.
@@ -289,6 +289,7 @@ def write_lua_items_to_lua(file_dir, lua_parts, encoding, drop_list):
         if item_id not in drop_list:
             item_id = str(item_id)
             f.write(tab + "[" + item_id + "] = {\n")
+            # print("Writing item #" + item_id)
             for item_key in lua_dict[item_id]:
                 if isinstance(lua_dict[item_id][item_key], list):
                     multi_line_embed_str = tab * 2 + str(item_key) + " = {\n"
@@ -302,7 +303,9 @@ def write_lua_items_to_lua(file_dir, lua_parts, encoding, drop_list):
                     f.write(multi_line_embed_str)
                 else:
                     # Writes the key and value
-                    f.write(tab * 2 + str(item_key) + " = " + str(lua_dict[item_id][item_key]) + ",\n")
+                    out_line = tab * 2 + str(item_key) + " = " + str(lua_dict[item_id][item_key]) + ",\n"
+                    # print(out_line)
+                    f.write(out_line)
             f.write(tab + "},\n")
     f.write("}\n")
     f.write(lua_end)
@@ -481,8 +484,8 @@ def get_identifiedResourceName(item_entry):
     #     using item.
     if item_entry["type"] == 6 or item_entry["type"] == '6':
         # if it's a card
-        # card_sprite_str = '"ÀÌ¸§¾ø´ÂÄ«µå"'
-        card_sprite_str = '"└╠©º¥°┤┬─½ÁÕ"'
+        card_sprite_str = '"ÀÌ¸§¾ø´ÂÄ«µå"'
+        # card_sprite_str = '"└╠©º¥°┤┬─½ÁÕ"'
         identifiedResourceName = card_sprite_str
     else:
         identifiedResourceName = '"' + item_entry["spr_name"] + '"'
