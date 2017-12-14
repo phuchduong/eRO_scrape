@@ -1,37 +1,5 @@
-Guillotine
-Phen Card
-Roboglasses slot and non slot
-Dragon Wing ears vs dragon wings
-vide hats
-item_db inserts
-fix aquaring hat
-cookie ring
-day ring
-Marin_Ring
-Night_Ring
-mini game token
-valkyrie fragment
-event token
-drooping vide in lua
-
-helm of the abyss
-christmas tree hat
-christmas star
-black b wings
-
-elemental wings (pixie wings)
 elemental rings
 
-Baby Leopard - Drooping Baby Leopard 
-Aliza - Aliza Doll - Not in Official or New DB
-Am Mut - Dokebi Horn (Wearable) - Not in New DB - Item ID in rAthena DB comes out as Well Chewed Pencil
-Hylozoist - Hylozoist Hat
-Mastering - Squatting Poring
-Toucan - Tucano Hat
-Mermaid - Victory Wings
-Zealotus(Zherlthsh) - Zealotus Doll
-novice adventure suite can be worn by anyone
-essential backpack can be worn by anyone
 setana scarf
 roboeyes
 
@@ -42,3 +10,23 @@ i love ero hat
 awsm
 
 soul of cold -> 7837
+
+empty ids:
+45002,empty,
+45015,empty,
+45017,awsm,unknown ero item
+45018,empty,
+45042,batmask,unknown ero item
+45044,bbrooch,unknown ero item
+
+missing asset:
+batring
+
+Missing sprite  | Baby Leopard - Drooping Baby Leopard 
+45001           | Aliza - Aliza Doll - Not in Official or New DB
+Missing sprite  | Am Mut - Dokebi Horn (Wearable) - Not in New DB - Item ID in rAthena DB comes out as Well Chewed Pencil
+Missing sprite  | Hylozoist - Hylozoist Hat
+Missing sprite  | Mastering - Squatting Poring
+Missing sprite  | Toucan - Tucano Hat
+5357            | Mermaid - Victory Wings
+45549           | Zealotus(Zherlthsh) - Zealotus Doll
