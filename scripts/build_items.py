@@ -96,7 +96,7 @@ def main():
         drop_list=drop_list)
 
     # ########################################################################
-    # # 4. Insert entries that do not exist iteminfo.lua from recon_db       #
+    # # 4. Insert entries from the recon_db into the iteminfo lua            #
     # ########################################################################
     iteminfo_lua["iteminfo_db"] = insert_new_items_into_lua_db(
         lua_db=iteminfo_lua["iteminfo_db"], recon_db=recon_db)
@@ -383,10 +383,11 @@ def insert_new_items_into_lua_db(lua_db, recon_db):
             lua_db[item_id_str]["unidentifiedDescriptionName"] = get_unidentifiedDescriptionName(item_entry=item_entry)
             lua_db[item_id_str]["identifiedDisplayName"] = get_identifiedDisplayName(item_entry=item_entry)
             lua_db[item_id_str]["identifiedResourceName"] = get_identifiedResourceName(item_entry=item_entry)
-            description = get_identifiedDescriptionName(item_entry=item_entry)
+            description_list = get_identifiedDescriptionName(item_entry=item_entry)
             for sentence in lua_db[item_id_str]["identifiedDescriptionName"]:
-                description.append(sentence)
-            lua_db[item_id_str]["identifiedDescriptionName"] = description
+                description_list.append(sentence)
+            lua_db[item_id_str]["identifiedDescriptionName"] = description_list
+            # lua_db[item_id_str]["identifiedDescriptionName"] = get_identifiedDescriptionName(item_entry=item_entry)
             lua_db[item_id_str]["slotCount"] = get_slotCount(item_entry=item_entry)
             lua_db[item_id_str]["ClassNum"] = get_ClassNum(item_entry=item_entry)
             modified.append(item_id)
