@@ -10,6 +10,17 @@ neko cookie
 45359 observer renamed to saiyan scouter
 peerless shades 
 
+add tool dealer to louyang
+add tool dealer, kafra, healer, buffaho to go 36
+add tool dealer and eRO kafra to geffen
+add tool dealer to moscovia
+add tool dealer to comodo, move hullaris down
+add npcs to archer village
+add west alberta to @go
+add @go to archer village
+
+beetle king spawn
+
 change status immunity to 150 vit
 
 cookrie
@@ -18,6 +29,10 @@ i love ero hat
 suicidal device
 awsm
 mvp valk helm
+
+people can dead branch in town
+people can abra in town
+increase rate of abra
 
 
 empty ids:
