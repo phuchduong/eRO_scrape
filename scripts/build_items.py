@@ -54,7 +54,7 @@ def main():
         45358,  # Drooping Nora Stark
         45236,  # Drooping Okale
         45164,  # Drooping Paradox924X
-        45237,  # Drooping Praetor
+        # 45237,  # Drooping Praetor
         45175,  # Drooping Saproling
         45449,  # Drooping Skwipe
         45469,  # Drooping Super Scope
@@ -63,7 +63,7 @@ def main():
         45490,  # Drooping Vhaidra
         45178,  # Drooping Windii
         45512,  # Drooping Xackery
-        45238,  # Drooping Yami
+        # 45238,  # Drooping Yami
         45520,  # Drooping Yosh
         # 20581,  # Drooping Zhao
     ]
@@ -340,7 +340,7 @@ def parse_reconciliation_spreadsheet(file_dir):
         for header_name in header_index:
             if header_name != "item_id":
                 item_dict[item_id][header_name] = ex_sheet.cell(row=i, column=header_index[header_name]).value
-        print(item_dict[item_id]["item_name"])
+        # print(item_dict[item_id]["item_name"])
     # For debugging, prints sample data out from the item dict
     # for item_id in item_dict:
     #     print(

@@ -1,14 +1,23 @@
-new bullets
-casings for bullets
-
-essential backpack wearable by trans first class and novice
 setana scarf
 roboeyes
 cheshire hat
-rough wind hairpin  https://essencereborn.com/forum/index.php?/topic/246-rough-wind-hairpin/
+
 neko cookie
 45359 observer renamed to saiyan scouter
 peerless shades 
+
+Hode hade -> dropped by hode
+
+45368 phoenix wing -> souil wing
+45489,valkyriewings -> WHITE BUTTERFLY WINGS
+45507,wings,wings -> peco eggs, move to midgear
+45535,Exodus_Wings, -> no sprite?
+
+add back drooping yami
+add back drooping praetor
+
+mermaid drops victory wings at 2.5%
+
 
 add tool dealer to louyang
 add tool dealer, kafra, healer, buffaho to go 36
@@ -19,9 +28,9 @@ add npcs to archer village
 add west alberta to @go
 add @go to archer village
 
-beetle king spawn
 
 change status immunity to 150 vit
+dragon wings > red dragon wings
 
 cookrie
 
@@ -33,6 +42,15 @@ mvp valk helm
 people can dead branch in town
 people can abra in town
 increase rate of abra
+
+Mistress card proposed effects
+1. removes gemstone usage
+2. -5% cast delay
+3. 5% chance of casting level 3 jupitel thunder when hit by a magic attack
+4a. 30% silence resistance
+4b. 5% MDEF Piercing
+4c. 10% increase damage to elemental spells
+4d. 10% chance to cast a random level 3 elemental bolt when you cast a level 10 elemental bolt
 
 
 empty ids:
