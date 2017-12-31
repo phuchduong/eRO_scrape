@@ -121,18 +121,20 @@ def main(args):
     # # End of script                                                       #
     # #######################################################################
     # Opens the new iteminfo.lua and item_dbtxt in sublime text
-    #program_dir = "C:\Program Files\Sublime Text 3\sublime_text.exe"
-    #sp.Popen([program_dir, new_lua_dir])
-    #sp.Popen([program_dir, new_ero_item_db_dir])
+    if not args.nosublime:
+        program_dir = "C:\Program Files\Sublime Text 3\sublime_text.exe"
+        sp.Popen([program_dir, new_lua_dir])
+        sp.Popen([program_dir, new_ero_item_db_dir])
 
     # places the new iteminfo into local ragnarok folder for testing on client side
-    #game_dir = "D:/games/Ragnarok/Gravity/kRO/System"
-    #if isdir(game_dir):
-    #    src = new_lua_dir
-    #    dst = game_dir + "/itemInfosryx.lub"
-    #    print("Copying new lua to..." + dst)
-    #    copyfile(src, dst)
-    #    sp.Popen(r'explorer /select,"D:\games\Ragnarok\Gravity\kRO\System"')
+    if not args.nocopy:
+        game_dir = "D:/games/Ragnarok/Gravity/kRO/System"
+        if isdir(game_dir):
+            src = new_lua_dir
+            dst = game_dir + "/itemInfosryx.lub"
+            print("Copying new lua to..." + dst)
+            copyfile(src, dst)
+            sp.Popen(r'explorer /select,"D:\games\Ragnarok\Gravity\kRO\System"')
 
     #input("Script complete. Press any key to close.")
 
@@ -646,8 +648,13 @@ def override_item_db_by_reconciliation(old_item_db_dir, recon_db, new_item_db_di
 
 if __name__ == '__main__':
     ap = argparse.ArgumentParser(description="build item_db/lua files from recon db")
-    ap.add_argument('--iteminfo', '-l', default='C:/repos/eRODev/eRO Client Data/system/itemInfosryx.lub')
-    ap.add_argument('--recon', '-r', default='C:/repos/essencero_restoration/scripts/reconciliation.xlsx')
-    ap.add_argument('--itemdb', '-i', default='C:/repos/eRODev/rAthena Files/db/import/ero_item_db/item_db.txt')
+    ap.add_argument('--iteminfo', '-l', default='C:/repos/eRODev/eRO Client Data/system/itemInfosryx.lub',
+                    help="Set the location of itemInfosryx.lub")
+    ap.add_argument('--recon', '-r', default='C:/repos/essencero_restoration/scripts/reconciliation.xlsx',
+                    help="Set the location of reconciliation.xlsx")
+    ap.add_argument('--itemdb', '-i', default='C:/repos/eRODev/rAthena Files/db/import/ero_item_db/item_db.txt',
+                    help="Set the location of the item_db.txt")
+    ap.add_argument('--nosublime', default=False, action='store_true', help="Don't open sublime")
+    ap.add_argument('--nocopy', default=False, action='store_true', help="Don't copy the new lub file")
     args = ap.parse_args()
     main(args)
