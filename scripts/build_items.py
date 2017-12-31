@@ -18,23 +18,26 @@
 '''
 import re  # regular expression
 from os.path import isdir   # checks to see if a folder exists
-import openpyxl  # excel plugin
 import subprocess as sp  # to open files in a text editor as a subprocess
 from shutil import copyfile  # for moving files
+import argparse
+
+import openpyxl  # excel plugin
 
 
-def main():
+def main(args):
 
     ###############
     # file system #
     ###############
 
-    if isdir("C:/repos"):
-        repo_dir = "C:/repos"
-    elif isdir("D:/repos"):
-        repo_dir = "D:/repos"  # change this to your own
-    else:
-        repo_dir = '.'
+    #if isdir("C:/repos"):
+    #    repo_dir = "C:/repos"
+    #elif isdir("D:/repos"):
+    #    repo_dir = "D:/repos"  # change this to your own
+    #else:
+    #    repo_dir = '.'
+
 
     encoding = "latin1"
 
@@ -74,7 +77,7 @@ def main():
     ########################################################################
     # 1. Parse in iteminfo.lua, formulate an item dictionary               #
     ########################################################################
-    iteminfo_dir = repo_dir + "/itemInfosryx.lub"
+    iteminfo_dir = args.iteminfo
     iteminfo_lua = parse_item_info_lua(
         file_dir=iteminfo_dir,
         item_dict={},  # designating a new dictionary
@@ -83,14 +86,14 @@ def main():
     ########################################################################
     # 2. Parse in reconciliation spreadsheet, formulate an item dictionary #
     ########################################################################
-    recon_dir = repo_dir + "/reconciliation.xlsx"
+    recon_dir = args.recon
     recon_db = parse_reconciliation_spreadsheet(file_dir=recon_dir)
 
     # ########################################################################
     # # 3a. Insert items into item_db from reconciliation db                 #
     # ########################################################################
-    old_ero_item_db_dir = repo_dir + "/item_db.txt"
-    new_ero_item_db_dir = repo_dir + "/item_db_new.txt"
+    old_ero_item_db_dir = args.itemdb
+    new_ero_item_db_dir = args.itemdb.replace('db.txt', 'db_new.txt')
     # print_missing_item_ids(file_dir=old_ero_item_db_dir, new_item_dict={})
     override_item_db_by_reconciliation(
         old_item_db_dir=old_ero_item_db_dir,
@@ -107,7 +110,7 @@ def main():
     # ########################################################################
     # # 5. Write out the item dictionary to a new iteminfo.lua               #
     # ########################################################################
-    new_lua_dir = repo_dir + "/new_itemInfosryx.lub"
+    new_lua_dir = args.iteminfo.replace('itemInfo', 'new_itemInfo')
     write_lua_items_to_lua(
         file_dir=new_lua_dir,
         lua_parts=iteminfo_lua,
@@ -642,4 +645,9 @@ def override_item_db_by_reconciliation(old_item_db_dir, recon_db, new_item_db_di
 
 
 if __name__ == '__main__':
-    main()
+    ap = argparse.ArgumentParser(description="build item_db/lua files from recon db")
+    ap.add_argument('--iteminfo', '-l', default='C:/repos/eRODev/eRO Client Data/system/itemInfosryx.lub')
+    ap.add_argument('--recon', '-r', default='C:/repos/essencero_restoration/scripts/reconciliation.xlsx')
+    ap.add_argument('--itemdb', '-i', default='C:/repos/eRODev/rAthena Files/db/import/ero_item_db/item_db.txt')
+    args = ap.parse_args()
+    main(args)
