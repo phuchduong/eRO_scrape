@@ -1,4 +1,5 @@
 #!/usr/bin/env python.
+# -*- coding: latin1 -*-
 '''
     File name: build_items.py
     Date created: December 6, 2017
@@ -17,23 +18,20 @@
 '''
 import re  # regular expression
 from os.path import isdir   # checks to see if a folder exists
-import openpyxl  # excel plugin
 import subprocess as sp  # to open files in a text editor as a subprocess
 from shutil import copyfile  # for moving files
+import argparse
+import logging
+
+import openpyxl  # excel plugin
+
+logger = logging.getLogger('build_items')
 
 
-def main():
-
-    ###############
-    # file system #
-    ###############
-
-    if isdir("C:/repos"):
-        repo_dir = "C:/repos"
-    elif isdir("D:/repos"):
-        repo_dir = "D:/repos"  # change this to your own
-
+def main(args):
     encoding = "latin1"
+    loglevel = ['WARN', 'INFO', 'DEBUG'][args.debug]
+    logging.basicConfig(level=loglevel)
 
     # List of item ids of items that are being left behind and not integrated into the new server.
     # Treatment: These item should be skipped during the merge.
@@ -71,64 +69,89 @@ def main():
     ########################################################################
     # 1. Parse in iteminfo.lua, formulate an item dictionary               #
     ########################################################################
-    iteminfo_dir = repo_dir + "/eRODev/eRO Client Data/system/itemInfosryx.lub"
+
+    iteminfo_dir = args.iteminfo
+    logger.warning("Loading iteminfo lua from " + iteminfo_dir)
     iteminfo_lua = parse_item_info_lua(
         file_dir=iteminfo_dir,
         item_dict={},  # designating a new dictionary
         encoding=encoding)
+    logger.warning("Loading complete - iteminfo lua")
+    # Debug if needed, this grabs the items list and items with a description in them.
+    # iteminfo_keys = [x for x in iteminfo_lua['iteminfo_db'].keys()]
+    # iteminfo_has_idn = [x for x, y in iteminfo_lua['iteminfo_db'].items() if 'identifiedDescriptionName' in y.keys()]
+    # logger.info("Keys without identifiedDescriptionName: " + repr(set(iteminfo_keys)-set(iteminfo_has_idn)))
 
     ########################################################################
     # 2. Parse in reconciliation spreadsheet, formulate an item dictionary #
     ########################################################################
-    recon_dir = repo_dir + "/essencero_restoration/scripts/reconciliation.xlsx"
+    recon_dir = args.recon
+    logger.warning("Loading reconciliation spreadsheet from " + recon_dir)
     recon_db = parse_reconciliation_spreadsheet(file_dir=recon_dir)
+    logger.warning("Loading complete - reconciliation spreadsheet")
 
     # ########################################################################
     # # 3a. Insert items into item_db from reconciliation db                 #
     # ########################################################################
-    old_ero_item_db_dir = repo_dir + "/eRODev/rAthena Files/db/import/ero_item_db/item_db.txt"
-    new_ero_item_db_dir = repo_dir + "/eRODev/rAthena Files/db/import/ero_item_db/item_db_new.txt"
+    old_ero_item_db_dir = args.itemdb
+    new_ero_item_db_dir = args.itemdb.replace('db.txt', 'db_new.txt')
+    logger.warning("Loading/Overriding item_db.txt from " + old_ero_item_db_dir)
     # print_missing_item_ids(file_dir=old_ero_item_db_dir, new_item_dict={})
     override_item_db_by_reconciliation(
         old_item_db_dir=old_ero_item_db_dir,
         recon_db=recon_db,
         new_item_db_dir=new_ero_item_db_dir,
         drop_list=drop_list)
+    logger.warning("Load/Override of item_db.txt complete")
 
     # ########################################################################
     # # 4. Insert entries from the recon_db into the iteminfo lua            #
     # ########################################################################
+    logger.warning("Inserting items into iteminfo ")
     iteminfo_lua["iteminfo_db"] = insert_new_items_into_lua_db(
         lua_db=iteminfo_lua["iteminfo_db"], recon_db=recon_db)
+    logger.warning("Insert complete (iteminfo)")
 
-    # ########################################################################
-    # # 5. Write out the item dictionary to a new iteminfo.lua               #
-    # ########################################################################
-    new_lua_dir = repo_dir + "/eRODev/eRO Client Data/system/new_itemInfosryx.lub"
+    ########################################################################
+    # 5. Edit the Lua Descriptions (Modify Weight/Class/Etc.)              #
+    ########################################################################
+    # iteminfo_lua["iteminfo_db"] = update_lua_db_descriptions(
+    #     iteminfo_lua["iteminfo_db"], item_db_dict)
+
+    ########################################################################
+    # 6. Write out the item dictionary to a new iteminfo.lua               #
+    ########################################################################
+    new_lua_dir = args.iteminfo.replace('itemInfo', 'new_itemInfo')
+    logger.warning("Writing new iteminfo lua file")
     write_lua_items_to_lua(
         file_dir=new_lua_dir,
         lua_parts=iteminfo_lua,
         encoding=encoding,
         drop_list=drop_list)
+    logger.warning("Write of iteminfo lua complete")
 
     # #######################################################################
     # # End of script                                                       #
     # #######################################################################
     # Opens the new iteminfo.lua and item_dbtxt in sublime text
-    program_dir = "C:\Program Files\Sublime Text 3\sublime_text.exe"
-    sp.Popen([program_dir, new_lua_dir])
-    sp.Popen([program_dir, new_ero_item_db_dir])
+    if not args.nosublime:
+        logger.warning("Opening sublime with lua/item_db.txt")
+        program_dir = "C:\Program Files\Sublime Text 3\sublime_text.exe"
+        sp.Popen([program_dir, new_lua_dir])
+        sp.Popen([program_dir, new_ero_item_db_dir])
 
     # places the new iteminfo into local ragnarok folder for testing on client side
-    game_dir = "D:/games/Ragnarok/Gravity/kRO/System"
-    if isdir(game_dir):
-        src = new_lua_dir
-        dst = game_dir + "/itemInfosryx.lub"
-        print("Copying new lua to..." + dst)
-        copyfile(src, dst)
-        sp.Popen(r'explorer /select,"D:\games\Ragnarok\Gravity\kRO\System"')
+    if not args.nocopy:
+        logger.warning("Loading iteminfo lua to test client")
+        game_dir = "D:/games/Ragnarok/Gravity/kRO/System"
+        if isdir(game_dir):
+            src = new_lua_dir
+            dst = game_dir + "/itemInfosryx.lub"
+            logger.warning("Copying new lua to..." + dst)
+            copyfile(src, dst)
+            sp.Popen(r'explorer /select,"D:\games\Ragnarok\Gravity\kRO\System"')
 
-    input("Script complete. Press any key to close.")
+    input("Script complete. Press enter to close.")
 
 
 # Parses an iteminfo lua and returns a 3 element dictionary whoses keys are
@@ -181,6 +204,7 @@ def parse_item_info_lua(file_dir, item_dict, encoding):
                 # if item code is found,
                 # extract item code
                 current_item_id = re.search(pattern=extract_item_code, string=line).group(0)
+                logger.info("Loading Data for item id: " + str(current_item_id))
                 if current_item_id not in item_dict:
                     item_dict[current_item_id] = {}
                     # make a new dictionary reference
@@ -203,11 +227,12 @@ def parse_item_info_lua(file_dir, item_dict, encoding):
                 item_dict[current_item_id][key] = value
 
                 # if key == 'identifiedResourceName' and current_item_id == '4131':
-                #     print(line)
+                #     logger.debug(line)
             elif is_multi_line_embed_key.match(line):
                 # if it's the start of a multi line embed, create an embedded dictionary with a list
                 # as it's value
                 key = line.split("=")[0].strip()
+                logger.debug("Adding {} to {}".format(key, current_item_id))
                 item_dict[current_item_id][key] = []
                 current_embed_key = key
             elif is_multi_line_embed_value.match(line):
@@ -235,10 +260,10 @@ def parse_item_info_lua(file_dir, item_dict, encoding):
                 ignored_data = line.strip()
                 if ignored_data != "":
                     if ignored_data[0] != "}":
-                        print("Skipping line: " + str(counter) + ": " + line)
+                        logger.info("Skipping line: " + str(counter) + ": " + line)
             counter += 1
 
-    print("Parsed " + str(counter) + " lines from Lua.")
+    logger.info("Parsed " + str(counter) + " lines from Lua.")
     item_lua_dict = {
         "beg": lua_beg,
         "iteminfo_db": item_dict,
@@ -252,13 +277,13 @@ def print_opening_dir(file_dir):
     file_dir_split = file_dir.split("/")
     filename = file_dir_split[-1]
     file_path = file_dir_split[:-1]
-    print("Opening: " + filename + " | From: " + "/".join(file_path))
+    logger.info("Opening: " + filename + " | From: " + "/".join(file_path))
 
 
 # Tells the user how many lines were writte to a file
 def print_writing_status(counter, file_dir):
     filename = file_dir.split("/")[-1]
-    print("Found... " + str(counter) + " items in " + filename + "\n")
+    logger.info("Found... " + str(counter) + " items in " + filename + "\n")
 
 
 # Writes an iteminfo lua and from a 3 element dictionary parameter [1]<lua_parts> whoses keys are
@@ -289,7 +314,7 @@ def write_lua_items_to_lua(file_dir, lua_parts, encoding, drop_list):
         if item_id not in drop_list:
             item_id = str(item_id)
             f.write(tab + "[" + item_id + "] = {\n")
-            # print("Writing item #" + item_id)
+            logger.debug("Writing item #" + item_id)
             for item_key in lua_dict[item_id]:
                 if isinstance(lua_dict[item_id][item_key], list):
                     multi_line_embed_str = tab * 2 + str(item_key) + " = {\n"
@@ -300,16 +325,17 @@ def write_lua_items_to_lua(file_dir, lua_parts, encoding, drop_list):
                     else:
                         multi_line_embed_str += tab * 3 + '"...Coming Soon..."' + ",\n"
                     multi_line_embed_str += tab * 2 + "},\n"
+                    logger.debug("Output item to lua: " + multi_line_embed_str)
                     f.write(multi_line_embed_str)
                 else:
                     # Writes the key and value
                     out_line = tab * 2 + str(item_key) + " = " + str(lua_dict[item_id][item_key]) + ",\n"
-                    # print(out_line)
+                    logger.debug("Output item to lua: " + out_line)
                     f.write(out_line)
             f.write(tab + "},\n")
     f.write("}\n")
     f.write(lua_end)
-    print("Writing " + str(len(lua_dict)) + " items to... " + file_dir)
+    logger.info("Writing " + str(len(lua_dict)) + " items to... " + file_dir)
     f.close()
 
 
@@ -331,8 +357,9 @@ def parse_reconciliation_spreadsheet(file_dir):
         if value is not None:
             header_index[value] = i
     # # For debugging, print headers that were found
-    # for header in header_index:
-    #     print("Header: " + str(header) + (" " * (20-len(header))) + "column: " + str(header_index[header]))
+    if logger.isEnabledFor(logging.DEBUG):
+        for header in header_index:
+            logger.debug("Header: " + str(header) + (" " * (20-len(header))) + "column: " + str(header_index[header]))
     item_dict = {}
     for i in range(2, ex_sheet.max_row + 1):
         item_id = ex_sheet.cell(row=i, column=header_index["item_id"]).value
@@ -340,14 +367,15 @@ def parse_reconciliation_spreadsheet(file_dir):
         for header_name in header_index:
             if header_name != "item_id":
                 item_dict[item_id][header_name] = ex_sheet.cell(row=i, column=header_index[header_name]).value
-        # print(item_dict[item_id]["item_name"])
+        logger.debug(item_dict[item_id]["item_name"])
     # For debugging, prints sample data out from the item dict
-    # for item_id in item_dict:
-    #     print(
-    #         str(item_id) + "," +
-    #         str(item_dict[item_id]["item_name"]) + "," +
-    #         str(item_dict[item_id]["spr_name"]) + "," +
-    #         str(item_dict[item_id]["view_id"]))
+    if logger.isEnabledFor(logging.DEBUG):
+        for item_id in item_dict:
+            logger.debug(
+                str(item_id) + "," +
+                str(item_dict[item_id]["item_name"]) + "," +
+                str(item_dict[item_id]["spr_name"]) + "," +
+                str(item_dict[item_id]["view_id"]))
     return item_dict
 
 
@@ -372,55 +400,65 @@ def insert_new_items_into_lua_db(lua_db, recon_db):
     modified = []
     inserted = []
     error = []
+    weights = []
     for item_id in recon_db:
         item_id_str = str(item_id)
         if item_id_str in lua_db:
             # Item already exists in the iteminfo
             # In the future, use this area to override bad descriptions
             item_entry = recon_db[item_id]
-            lua_db[item_id_str]["unidentifiedDisplayName"] = get_unidentifiedDisplayName(item_entry=item_entry)
-            lua_db[item_id_str]["unidentifiedResourceName"] = get_identifiedResourceName(item_entry=item_entry)
-            lua_db[item_id_str]["unidentifiedDescriptionName"] = get_unidentifiedDescriptionName(item_entry=item_entry)
-            lua_db[item_id_str]["identifiedDisplayName"] = get_identifiedDisplayName(item_entry=item_entry)
-            lua_db[item_id_str]["identifiedResourceName"] = get_identifiedResourceName(item_entry=item_entry)
-            description_list = get_identifiedDescriptionName(item_entry=item_entry)
-            for sentence in lua_db[item_id_str]["identifiedDescriptionName"]:
-                description_list.append(sentence)
-            lua_db[item_id_str]["identifiedDescriptionName"] = description_list
-            # lua_db[item_id_str]["identifiedDescriptionName"] = get_identifiedDescriptionName(item_entry=item_entry)
-            lua_db[item_id_str]["slotCount"] = get_slotCount(item_entry=item_entry)
-            lua_db[item_id_str]["ClassNum"] = get_ClassNum(item_entry=item_entry)
+            lua_db[item_id_str]["unidentifiedDisplayName"] = get_unidentifiedDisplayName(item_entry)
+            lua_db[item_id_str]["unidentifiedResourceName"] = get_identifiedResourceName(item_entry)
+            lua_db[item_id_str]["unidentifiedDescriptionName"] = get_unidentifiedDescriptionName(item_entry)
+            lua_db[item_id_str]["identifiedDisplayName"] = get_identifiedDisplayName(item_entry)
+            lua_db[item_id_str]["identifiedResourceName"] = get_identifiedResourceName(item_entry)
+            # description_list = get_identifiedDescriptionName(item_entry=item_entry, lua_info=lua_db[item_id_str])
+            # for sentence in lua_db[item_id_str]["identifiedDescriptionName"]:
+            #    description_list.append(sentence)
+            # lua_db[item_id_str]["identifiedDescriptionName"] = description_list
+            lua_db[item_id_str]["identifiedDescriptionName"] = get_identifiedDescriptionName(
+                item_entry,
+                lua_db[item_id_str]["identifiedDescriptionName"])
+            lua_db[item_id_str]["slotCount"] = get_slotCount(item_entry)
+            lua_db[item_id_str]["ClassNum"] = get_ClassNum(item_entry)
             modified.append(item_id)
         elif item_id_str not in lua_db:
             # Insert new items into the item description
             item_entry = recon_db[item_id]
             lua_db[item_id_str] = {
-                "unidentifiedDisplayName": get_unidentifiedDisplayName(item_entry=item_entry),
-                "unidentifiedResourceName": get_identifiedResourceName(item_entry=item_entry),
-                "unidentifiedDescriptionName": get_unidentifiedDescriptionName(item_entry=item_entry),
-                "identifiedDisplayName": get_identifiedDisplayName(item_entry=item_entry),
-                "identifiedResourceName": get_identifiedResourceName(item_entry=item_entry),
-                "identifiedDescriptionName": get_identifiedDescriptionName(item_entry=item_entry),
-                "slotCount": get_slotCount(item_entry=item_entry),
-                "ClassNum": get_ClassNum(item_entry=item_entry),
+                "unidentifiedDisplayName": get_unidentifiedDisplayName(item_entry),
+                "unidentifiedResourceName": get_identifiedResourceName(item_entry),
+                "unidentifiedDescriptionName": get_unidentifiedDescriptionName(item_entry),
+                "identifiedDisplayName": get_identifiedDisplayName(item_entry),
+                "identifiedResourceName": get_identifiedResourceName(item_entry),
+                "identifiedDescriptionName": get_identifiedDescriptionName(item_entry, None),
+                "slotCount": get_slotCount(item_entry),
+                "ClassNum": get_ClassNum(item_entry),
             }
             inserted.append(item_id)
         else:
             error.append(item_id)
+        if 'Weight:' in ''.join(lua_db[item_id_str]["identifiedDescriptionName"]):
+            weights.append(item_id)
     modified = sorted(modified)
     inserted = sorted(inserted)
     error = sorted(error)
-    print("Insertion status:")
-    print("Modified: " + ",".join(str(x) for x in modified))
-    print("Inserted: " + ",".join(str(x) for x in inserted))
-    print("Error: " + ",".join(str(x) for x in error))
+    weights.sort()
+    logger.info("Lua Update: Modified: " + ",".join(str(x) for x in modified))
+    logger.info("Lua Update: Inserted: " + ",".join(str(x) for x in inserted))
+    if len(error):
+        logging.critical("Lua Update: Error: " + ",".join(str(x) for x in error))
+    else:
+        logger.info("Lua Update: No Errors")
+    logging.info("Lua Update: Modified: {}, Inserted: {}, Error: {}. Weights exist on {} of {} items.".format(
+        len(modified), len(inserted), len(error), len(weights), len(recon_db)))
     return lua_db
 
 
 # Derives unidentifiedDisplayName from the item entry
 def get_unidentifiedDisplayName(item_entry):
     # this is the name of the item they see when it is unidentified
-    print(str(item_entry["item_name"]))
+    logger.debug("Get unidentifiedDisplayName for " + str(item_entry["item_name"]))
     item_name = item_entry["item_name"]
     unidentifiedDisplayName = '"Unidentified ' + item_name + '"'
     return unidentifiedDisplayName
@@ -494,13 +532,22 @@ def get_identifiedResourceName(item_entry):
 
 
 # Derives identifiedDescriptionName from the item entry
-def get_identifiedDescriptionName(item_entry):
+def get_identifiedDescriptionName(item_entry, lua_info):
     description = item_entry["description"]
     if description is None or description == "":
         identifiedDescriptionName = ['""']
     else:
         description = description.replace("\"", "\\\"")
         identifiedDescriptionName = ['"' + description + '"']
+    if lua_info:
+        for sentence in lua_info:
+            identifiedDescriptionName.append(sentence)
+    # Clean up weight/class
+    identifiedDescriptionName = [x for x in identifiedDescriptionName if 'Weight' not in x]
+    weight = float(item_entry['weight'])/10
+    if int(weight) == weight:
+        weight = int(weight)
+    identifiedDescriptionName.append('"jWeight:^006600 {}^000000"'.format(weight))
     return identifiedDescriptionName
 
 
@@ -561,14 +608,13 @@ def print_missing_item_ids(file_dir, new_item_dict):
     # print duplicates #
     ####################
     duplicates = []
-    seen_dict = []
+    # create a unique list via python's set functionality
+    seen_dict = set([str(x) for x in item_db_dict.keys()])
     for item_id in item_db_dict:
         item_id = str(item_id)
         if item_id in seen_dict:
             duplicates.append(item_id)
-        else:
-            seen_dict.append(item_id)
-    print("Duplicates found in old ero item_db.txt: " + ",".join(duplicates))
+    logging.critical("Duplicates found in old ero item_db.txt: " + ",".join(duplicates))
 
 
 # Generates a new_item_db.txt from an item_db.txt, where a reconciliation
@@ -608,9 +654,35 @@ def override_item_db_by_reconciliation(old_item_db_dir, recon_db, new_item_db_di
     new_file.close()
     print_writing_status(file_dir=new_item_db_dir, counter=counter)
 
-    for recon_item_id in recon_db:
-        if recon_item_id not in old_item_db_list:
-            print("Missing from item_db.txt|" + str(recon_db[recon_item_id]["concat"]))
+    # Time for some set magic
+    # - set_old is all the id's in the old list
+    # - set_recon is all the id's in the recon db
+    # * setA - setB is all items in setA not in setB
+    set_old = set([int(x) for x in old_item_db_list])
+    set_recon = set(recon_db.keys())
+    set_old_no_recon = list(set_old - set_recon)
+    set_recon_no_old = list(set_recon - set_old)
+    set_old_no_recon.sort()
+    set_recon_no_old.sort()
+    logger.info("In Old, Not recon: " + repr(set_old_no_recon))
+    logger.info("In Recon, Not Old: " + repr(set_recon_no_old))
+    if logger.isEnabledFor(logging.DEBUG):
+        for recon_item_id in recon_db:
+            if recon_item_id not in old_item_db_list:
+                logger.debug("Missing from item_db.txt|" + str(recon_db[recon_item_id]["concat"]))
 
 
-main()
+if __name__ == '__main__':
+    ap = argparse.ArgumentParser(description="build item_db/lua files from recon db")
+    ap.add_argument('--iteminfo', '-l', default='C:/repos/eRODev/eRO Client Data/system/itemInfosryx.lub',
+                    help="Set the location of itemInfosryx.lub")
+    ap.add_argument('--recon', '-r', default='C:/repos/essencero_restoration/scripts/reconciliation.xlsx',
+                    help="Set the location of reconciliation.xlsx")
+    ap.add_argument('--itemdb', '-i', default='C:/repos/eRODev/rAthena Files/db/import/ero_item_db/item_db.txt',
+                    help="Set the location of the item_db.txt")
+    ap.add_argument('--nosublime', default=False, action='store_true', help="Don't open sublime")
+    ap.add_argument('--nocopy', default=False, action='store_true', help="Don't copy the new lub file")
+    ap.add_argument('--debug', '-d', action='count', default=0,
+                    help='Raise debug output (-d for info, -dd for debug)')
+    args = ap.parse_args()
+    main(args)
