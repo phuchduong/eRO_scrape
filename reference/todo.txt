@@ -1,79 +1,44 @@
-Slotted Cyclops Eye
+45544   Naughty_Bubble
+45545   Nice_Bubble
 
-Sigrun's Wings Dropped by Ktullanux (MVP) - ice_dun03 - 5%
-plus slotted
+look at from this:
+20% + 0.1 * DEX + 0.1 * LUK
+combined 400 dex+luk stats = 60% success
 
-setana scarf
-roboeyes
-cheshire hat
+to this:
+20% + 0.175 * DEX + 0.175 * LUK
+combined 400 dex+luk stats = 90% successnew amatsu npcs
+Gunslinger skill full buster is using up 10 bullets instead of the noted 2
 
-neko cookie
-45359 observer renamed to saiyan scouter
-peerless shades 
+edp formula:
+from this:
+20% + 0.1 * DEX + 0.1 * LUK
+combined 400 dex+luk stats = 60% success
 
-Hode hade -> dropped by hode
+to this:
+20% + 0.175 * DEX + 0.175 * LUK
+combined 400 dex+luk stats = 90% success
 
-45368 phoenix wing -> souil wing
-45489,valkyriewings -> WHITE BUTTERFLY WINGS
-45507,wings,wings -> peco eggs, move to midgear
-45535,Exodus_Wings, -> no sprite?
+morroc
+amatsu
 
-add back drooping yami
-add back drooping praetor
+gunslinger shotgun, death fire
+renewal pistols
 
-mermaid drops victory wings at 2.5%
+item restriction
+2551 
+5286
+1644
+5502
 
+old red box:
+https://essencereborn.com/forum/index.php?/topic/262-old-red-box/
 
-add tool dealer to louyang
-add tool dealer, kafra, healer, buffaho to go 36
-add tool dealer and eRO kafra to geffen
-add tool dealer to moscovia
-add tool dealer to comodo, move hullaris down
-add npcs to archer village
-add west alberta to @go
-add @go to archer village
+Make these drop:
+https://web.archive.org/web/20150524034337/http://essence-ro.com/item/view/?id=5361
+https://web.archive.org/web/20150531063204/http://essence-ro.com/item/view/?id=2702
 
+https://irowiki.org/wiki/Old_Glast_Heim
+https://irowiki.org/wiki/Temporal_Boots_Enchants#Temporal_Boots
 
-change status immunity to 150 vit
-dragon wings > red dragon wings
-
-cookrie
-
-i love ero hat
-suicidal device
-awsm
-mvp valk helm
-
-people can dead branch in town
-people can abra in town
-increase rate of abra
-
-Mistress card proposed effects
-1. removes gemstone usage
-2. -5% cast delay
-3. 5% chance of casting level 3 jupitel thunder when hit by a magic attack
-4a. 30% silence resistance
-4b. 5% MDEF Piercing
-4c. 10% increase damage to elemental spells
-4d. 10% chance to cast a random level 3 elemental bolt when you cast a level 10 elemental bolt
-
-
-empty ids:
-45002,empty,
-45015,empty,
-45017,awsm,unknown ero item
-45018,empty,
-45042,batmask,unknown ero item
-45044,bbrooch,unknown ero item
-
-missing asset:
-batring
-
-Missing sprite  | Baby Leopard - Drooping Baby Leopard 
-45001           | Aliza - Aliza Doll - Not in Official or New DB
-Missing sprite  | Am Mut - Dokebi Horn (Wearable) - Not in New DB - Item ID in rAthena DB comes out as Well Chewed Pencil
-Missing sprite  | Hylozoist - Hylozoist Hat
-Missing sprite  | Mastering - Squatting Poring
-Missing sprite  | Toucan - Tucano Hat
-5357            | Mermaid - Victory Wings
-45549           | Zealotus(Zherlthsh) - Zealotus Doll
+add helion revenant card to oca
