@@ -86,8 +86,8 @@ def main():
     # ########################################################################
     # # 3a. Insert items into item_db from reconciliation db                 #
     # ########################################################################
-    old_ero_item_db_dir = repo_dir + "/eRODev/rAthena Files/db/import/ero_item_db/item_db.txt"
-    new_ero_item_db_dir = repo_dir + "/eRODev/rAthena Files/db/import/ero_item_db/item_db_new.txt"
+    old_ero_item_db_dir = repo_dir + "/eRODev/rAthena Files/db/import/item_db.txt"
+    new_ero_item_db_dir = repo_dir + "/eRODev/rAthena Files/db/import/item_db_new.txt"
     # print_missing_item_ids(file_dir=old_ero_item_db_dir, new_item_dict={})
     override_item_db_by_reconciliation(
         old_item_db_dir=old_ero_item_db_dir,
