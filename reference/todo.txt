@@ -42,3 +42,47 @@ https://irowiki.org/wiki/Old_Glast_Heim
 https://irowiki.org/wiki/Temporal_Boots_Enchants#Temporal_Boots
 
 add helion revenant card to oca
+
+horns of the buffalo
+change rates
+
+•100x witched star sands
+•20x oridecons
+•20x elunium
+•5 Ygg berries
+•5 Ygg Seeds
+•40x white pots
+•20x Blue Pots
+
+setana scarf
+
+fix valk armor description
+fix medal of honor descriptions
+fix the sign
+http://www.tamsinwhitfield.co.uk/cp/item_db.php?limit=10&sort=0&order=ASC&id=-1&item=&type=-1&iclass=-1&slot_sign=-1&slots=-1&desc=&script=&letter=M&search_x=0&search_y=0&start=150
+
+fix leather of tendrillion description
+
+bad hats
+31168<<doesn't show
+31137<<no show
+31164<<no show
+31141<<wrong equip sprite
+31153 <<no show
+31151<<mia===view ID 1565 doesn't exist :D
+31132<<doesn't show
+31136<<no show
+31089<<no show
+31123<<no show
+31167<<mia===view ID 1575 doesn't exist
+31149<<no show
+31152<<mia===1574 no view ID
+31138<<mia===1557 no view ID
+31165<<no show
+31172<<no show
+31150 <<mia===1564
+31091<<no show
+31121<<mia
+31166<<no show
+31120<<no show
+31139<<mia
