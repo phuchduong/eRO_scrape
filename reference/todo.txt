@@ -8,6 +8,7 @@ combined 400 dex+luk stats = 60% success
 to this:
 20% + 0.175 * DEX + 0.175 * LUK
 combined 400 dex+luk stats = 90% successnew amatsu npcs
+
 Gunslinger skill full buster is using up 10 bullets instead of the noted 2
 
 edp formula:
@@ -88,3 +89,6 @@ bad hats
 fix spawn tables for
 moc_pryd06
 look for duplicates in 3-3 shop
+https://irowiki.org/wiki/Max_HP
+
+fix 45156 dragon wing ears (+20 atk) desc
