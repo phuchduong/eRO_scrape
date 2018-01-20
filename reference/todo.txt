@@ -41,8 +41,6 @@ https://web.archive.org/web/20150531063204/http://essence-ro.com/item/view/?id=2
 https://irowiki.org/wiki/Old_Glast_Heim
 https://irowiki.org/wiki/Temporal_Boots_Enchants#Temporal_Boots
 
-add helion revenant card to oca
-
 horns of the buffalo
 change rates
 
@@ -86,3 +84,7 @@ bad hats
 31166<<no show
 31120<<no show
 31139<<mia
+
+fix spawn tables for
+moc_pryd06
+look for duplicates in 3-3 shop
