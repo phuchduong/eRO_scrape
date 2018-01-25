@@ -1,5 +1,6 @@
 # the build_iteminfo file system
 build_iteminfo_files/
+scripts/outputs/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
