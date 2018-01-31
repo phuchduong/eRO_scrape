@@ -3,7 +3,7 @@
     File name: print_tem_names.py
     Date created: January 31, 2017
     Python version: 3.6.1
-    Version: 0.0.0
+    Version: 0.1.0
     Purpose:
         Prints the item names from an item_db and an item_info.
     Author: Phuc H Duong
@@ -11,16 +11,17 @@
     Website: phuchduong.io
     Linkedin: https://www.linkedin.com/in/phuchduong/
 '''
-from os.path import isdir   # checks to see if a folder exists
+import os   # checks to see if a folder exists
+from os import path, makedirs
 import re  # regular expression
 
 
 # script goes here
 def main():
     # Repo folder
-    if isdir("C:/repos"):
+    if path.isdir("C:/repos"):
         repo_dir = "C:/repos"
-    elif isdir("D:/repos"):
+    elif path.isdir("D:/repos"):
         repo_dir = "D:/repos"
     else:
         repo_dir = ""  # change this to your own directory
@@ -31,7 +32,7 @@ def main():
 
     # Input data files
     item_db = repo_dir + server_repo + "/db/pre-re/item_db.txt"
-    item_info = repo + client_repo + "/eRO Client Data/System/itemInfosryx.lub"
+    item_info = repo_dir + client_repo + "/eRO Client Data/System/itemInfosryx.lub"
 
     # Builds an output folder if it doesn't exist within the same directory
     # as the executed script.
@@ -45,9 +46,9 @@ def main():
 def make_output_folder():
     # Requires import os
     # Get the current file path of the script.
-    script_dir = os.path.dirname(os.path.realpath(__file__))
+    script_dir = path.dirname(os.path.realpath(__file__))
     file_system_path = script_dir + "/outputs/"
-    system_folder_exists = os.path.isdir(file_system_path)
+    system_folder_exists = path.isdir(file_system_path)
 
     # Creates a system folder if it does not exist.
     if system_folder_exists:
