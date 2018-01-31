@@ -3,7 +3,7 @@
     File name: print_tem_names.py
     Date created: January 31, 2017
     Python version: 3.6.1
-    Version: 0.3.0
+    Version: 1.0.0
     Purpose:
         Prints the item names from an item_db and an item_info.
     Author: Phuc H Duong
@@ -31,7 +31,8 @@ def main():
     client_repo = "/eRODev/"
 
     # Input data files
-    item_db = repo_dir + server_repo + "/db/pre-re/item_db.txt"
+    # item_db = repo_dir + server_repo + "/db/pre-re/item_db.txt"
+    item_db = repo_dir + server_repo + "/db/import-tmpl/item_db.txt"
     item_info = repo_dir + client_repo + "/eRO Client Data/System/itemInfosryx.lub"
 
     # Builds an output folder if it doesn't exist within the same directory
@@ -45,9 +46,15 @@ def main():
         db_path=item_db,
         debug=debug_mode
     )
-    item_info_namse = parse_item_names_from_item_info(
+    item_info_names = parse_item_names_from_item_info(
         info_path=item_info,
         debug=debug_mode
+    )
+    print_item_names(
+        item_db_names=item_db_names,
+        item_info_names=item_info_names,
+        out_file_path=out_folder_path + out_filename,
+        debug=debug_mode,
     )
 
 
@@ -113,6 +120,30 @@ def parse_item_names_from_item_info(info_path, debug):
                 if debug:
                     print(str(current_id) + "\t" + item_info[current_id]["display_name"])
     return item_info
+
+
+# Prints out a TSV of item names using an item_db and an item_info.
+# Uses the item_Db to filter the item_info since the into_info is verbose.
+def print_item_names(item_db_names, item_info_names, out_file_path, debug):
+    f = open(file=out_file_path, mode="w")
+    header = "item_id\tdisplay_name\taegis_name\trathena_name\n"
+    f.write(header)
+    for item_id in item_db_names:
+        line = [str(item_id)]
+        line.append(item_db_names[item_id]["aegis_name"])
+        line.append(item_db_names[item_id]["rathena_name"])
+        try:
+            line.append(item_info_names[item_id]["display_name"])
+        except KeyError:
+            print("Missing from item_info: " + str(item_id) + " " + item_db_names[item_id]["rathena_name"])
+            pass
+
+        if len(line) == 4:
+            line = "\t".join(line)
+            line += "\n"
+            f.write(line)
+
+    f.close()
 
 
 main()
