@@ -15,15 +15,23 @@ import re  # regular expression
 
 # script goes here
 def main():
+    # Repo folder
     if isdir("C:/repos"):
         repo_dir = "C:/repos"
     elif isdir("D:/repos"):
-        repo_dir = "D:/repos"  # change this to your own
+        repo_dir = "D:/repos"
+    else:
+        repo_dir = ""  # change this to your own directory
 
-    # ero_db = repo_dir + "/eRODev/rAthena Files/db/import/ero_item_db/item_db.txt"
-    iro_db = repo_dir + "/eRODev/rAthena Files/db/import/iro_item_db/item_db.txt"
-    in_dir = iro_db
-    out_dir = repo_dir + "/essencero_restoration/scripts/outputs/"
+    # Repos
+    server_repo = "/essencera/"
+    client_repo = "/eRODev/"
+
+    # Input data files
+    item_db = repo_dir + server_repo + "/db/pre-re/item_db.txt"
+    item_info = repo + client_repo + "/eRO Client Data/System/itemInfosryx.lub"
+
+    # Output files
     out_filename = "item_db.tsv"
 
     item_db_to_tsv(in_dir=in_dir, out_dir=out_dir + out_filename)
