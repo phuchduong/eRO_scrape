@@ -3,7 +3,7 @@
     File name: print_tem_names.py
     Date created: January 31, 2017
     Python version: 3.6.1
-    Version: 0.1.0
+    Version: 0.2.0
     Purpose:
         Prints the item names from an item_db and an item_info.
     Author: Phuc H Duong
@@ -41,6 +41,20 @@ def main():
     # Output files
     out_filename = "item_names.tsv"
 
+    item_db = parse_item_names_from_item_db(db_path=item_db)
+
+
+# Traveres an item_db.txt and gets all item_ids and item names.
+def parse_item_names_from_item_db(db_path):
+    item_regex = "^\d{3,5},"
+    item_db = {}
+    is_item = re.compile(item_regex)
+    with open(file=db_path, mode="r") as f:
+        for line in f:
+            if is_item.match(line):
+                print(line)
+    return item_db
+
 
 # Loads the local file system, else create a new one.
 def make_output_folder():
@@ -56,7 +70,7 @@ def make_output_folder():
     else:
         print("Initializing output folder...")
         # creates a folder called "build_item_info_files" in the script directory
-        os.makedirs(file_system_path)
+        makedirs(file_system_path)
         print("Created folder: " + file_system_path)
 
     return(file_system_path)
