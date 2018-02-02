@@ -1,18 +1,20 @@
 #!/usr/bin/env python.
 '''
-    File name: print_tem_names.py
-    Date created: January 31, 2017
+    File name: reconcile_iteminfo_with_itemdb.py.py
+    Date created: February 2, 2017
     Python version: 3.6.1
-    Version: 1.0.0
+    Version: 0.1.0
     Purpose:
-        Prints the item names from an item_db and an item_info.
+        Prints a new item_info from an existing item_info,
+        give the details of an item_db.txt.
     Author: Phuc H Duong
     Original Repo: https://github.com/phuchduong/essencero_restoration
     Website: phuchduong.io
     Linkedin: https://www.linkedin.com/in/phuchduong/
 '''
-from os import path, makedirs
+from os import path, makedirs  # Windows file system
 import re  # regular expression
+import subprocess as sp  # to open files in a text editor as a subprocess
 
 
 # script goes here
@@ -40,22 +42,25 @@ def main():
     out_folder_path = make_output_folder()
 
     # Output files
-    out_filename = "item_names.tsv"
+    out_filename = "itemInfosryx.lub"
+    out_path = out_folder_path + out_filename
 
-    item_db_names = parse_item_names_from_item_db(
+    item_db = parse_item_names_from_item_db(
         db_path=item_db,
         debug=debug_mode
     )
-    item_info_names = parse_item_names_from_item_info(
-        info_path=item_info,
-        debug=debug_mode
-    )
-    print_item_names(
-        item_db_names=item_db_names,
-        item_info_names=item_info_names,
-        out_file_path=out_folder_path + out_filename,
+    print_new_lua(
+        item_db=item_db,
+        item_info_names=item_info,
+        out_file_path=out_path,
         debug=debug_mode,
     )
+
+    # Opens the new iteminfo.lua and item_db.txt in sublime text
+    program_dir = "C:\Program Files\Sublime Text 3\sublime_text.exe"
+    print("Done... Opening both item_infos in Sublime...")
+    sp.Popen([program_dir, item_info])
+    sp.Popen([program_dir, out_path])
 
 
 # Loads the local file system, else create a new one.
@@ -83,6 +88,7 @@ def parse_item_names_from_item_db(db_path, debug):
     item_regex = "^\d{3,5},"
     item_db = {}
     is_item = re.compile(item_regex)
+    print_opening_dir(file_dir=db_path)
     with open(file=db_path, mode="r") as f:
         for line in f:
             if is_item.match(line):
@@ -107,6 +113,8 @@ def parse_item_names_from_item_info(info_path, debug):
     is_item_display = re.compile(item_display_regex)
     item_info = {}
     current_id = None
+
+    print_opening_dir(file_dir=info_path)
     with open(file=info_path, mode="r", encoding="850") as f:
         for line in f:
             if is_item_id.search(line):
@@ -122,9 +130,8 @@ def parse_item_names_from_item_info(info_path, debug):
     return item_info
 
 
-# Prints out a TSV of item names using an item_db and an item_info.
-# Uses the item_Db to filter the item_info since the into_info is verbose.
-def print_item_names(item_db_names, item_info_names, out_file_path, debug):
+# Prints a new item info lua from an existing one, given an item_db.txt
+def print_new_lua(item_db, item_info_path, out_file_path, debug):
     f = open(file=out_file_path, mode="w")
     header = "item_id\taegis_name\trathena_name\tdisplay_name\n"
     f.write(header)
@@ -144,6 +151,21 @@ def print_item_names(item_db_names, item_info_names, out_file_path, debug):
             f.write(line)
 
     f.close()
+    print("Output file: " + out_file_path)
+
+
+# Tells the user in the console what file is currently being opened.
+def print_opening_dir(file_dir):
+    file_dir_split = file_dir.split("/")
+    filename = file_dir_split[-1]
+    file_path = file_dir_split[:-1]
+    print("Opening: " + filename + " | From: " + "/".join(file_path))
+
+
+# Tells the user how many lines were writte to a file
+def print_writing_status(counter, file_dir):
+    filename = file_dir.split("/")[-1]
+    print("Found... " + str(counter) + " items in " + filename + "\n")
 
 
 main()
