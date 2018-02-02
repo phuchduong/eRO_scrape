@@ -115,7 +115,7 @@ def main():
     # #######################################################################
     # # End of script                                                       #
     # #######################################################################
-    # Opens the new iteminfo.lua and item_dbtxt in sublime text
+    # Opens the new iteminfo.lua and item_db.txt in sublime text
     program_dir = "C:\Program Files\Sublime Text 3\sublime_text.exe"
     sp.Popen([program_dir, new_lua_dir])
     sp.Popen([program_dir, new_ero_item_db_dir])

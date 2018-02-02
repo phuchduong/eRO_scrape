@@ -126,7 +126,7 @@ def parse_item_names_from_item_info(info_path, debug):
 # Uses the item_Db to filter the item_info since the into_info is verbose.
 def print_item_names(item_db_names, item_info_names, out_file_path, debug):
     f = open(file=out_file_path, mode="w")
-    header = "item_id\tdisplay_name\taegis_name\trathena_name\n"
+    header = "item_id\taegis_name\trathena_name\tdisplay_name\n"
     f.write(header)
     for item_id in item_db_names:
         line = [str(item_id)]
