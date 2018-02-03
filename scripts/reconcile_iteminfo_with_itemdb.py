@@ -3,7 +3,7 @@
     File name: reconcile_iteminfo_with_itemdb.py.py
     Date created: February 2, 2017
     Python version: 3.6.1
-    Version: 0.1.0
+    Version: 0.1.9
     Purpose:
         Prints a new item_info from an existing item_info,
         give the details of an item_db.txt.
@@ -32,31 +32,34 @@ def main():
     server_repo = "/essencera/"
     client_repo = "/eRODev/"
 
-    # Input data files
-    # item_db = repo_dir + server_repo + "/db/pre-re/item_db.txt"
-    item_db = repo_dir + server_repo + "/db/import-tmpl/item_db.txt"
-    item_info = repo_dir + client_repo + "/eRO Client Data/System/itemInfosryx.lub"
-
     # Builds an output folder if it doesn't exist within the same directory
     # as the executed script.
     out_folder_path = make_output_folder()
 
-    # Output files
-    out_filename = "itemInfosryx.lub"
-    out_path = out_folder_path + out_filename
 
-    item_db = parse_item_names_from_item_db(
-        db_path=item_db,
+    iro_item_db_path = repo_dir + server_repo + "/db/pre-re/item_db.txt"
+    iro_item_db = parse_item_names_from_item_db(
+        db_path=iro_item_db_path,
         debug=debug_mode
     )
+    ero_item_db_path = repo_dir + server_repo + "/db/import-tmpl/item_db.txt"
+    ero_item_db = parse_item_names_from_item_db(
+        db_path=ero_item_db_path,
+        debug=debug_mode
+    )
+    item_db = iro_item_db.update(ero_item_db)
+
+    item_info_path = repo_dir + client_repo + "/eRO Client Data/System/itemInfosryx.lub"
+    out_path = out_folder_path + out_filename
+    out_filename = "itemInfosryx.lub"
     print_new_lua(
         item_db=item_db,
-        item_info_names=item_info,
+        item_info_names=item_info_path,
         out_file_path=out_path,
         debug=debug_mode,
     )
 
-    # Opens the new iteminfo.lua and item_db.txt in sublime text
+    # Opens the new and old iteminfo.lua in sublime text
     program_dir = "C:\Program Files\Sublime Text 3\sublime_text.exe"
     print("Done... Opening both item_infos in Sublime...")
     sp.Popen([program_dir, item_info])
@@ -92,66 +95,101 @@ def parse_item_names_from_item_db(db_path, debug):
     with open(file=db_path, mode="r") as f:
         for line in f:
             if is_item.match(line):
+                # Parse item line
+
                 line_split = line.split(",")
+                # 0  ID
                 item_id = int(line_split[0])
+                # 1  AegisName
                 aegis_name = line_split[1]
+                # 2  Name
                 rathena_name = line_split[2]
+                # 3  Type
+                # 4  Buy
+                # 5  Sell
+                # 6  Weight
+                # 7  ATK[:MATK]
+                # 8  DEF
+                # 9  Range
+                # 10 Slots
+                slot_count = line_split[10]
+                # 11 Job
+                # 12 Class
+                # 13 Gender
+                # 14 Loc
+                # 15 wLV
+                # 16 eLV[:maxLevel]
+                # 17 Refineable
+                # 18 View
+                # 19 { Script }
+                # 20 { OnEquip_Script }
+                # 21 { OnUnequip_Script }
                 item_db[item_id] = {
                     "aegis_name": aegis_name,
-                    "rathena_name": rathena_name
+                    "slot_count": slot_count,
+                    "rathena_name": rathena_name,
                 }
                 if debug:
                     print(str(item_id) + "\t" + aegis_name + "\t" + rathena_name)
     return item_db
 
 
-# Traveres an item_db.txt and gets all item_ids and item names.
-def parse_item_names_from_item_info(info_path, debug):
+# Writes out a new item_db.txt and renames the items from a list of items to rename.
+def rename_and_write_item_info(rename_list, db_path_in, db_path_out, debug):
+    f_out = open(file=db_path_out, mode="w", encoding="850")
+
     item_id_regex = "\[\d{3,5}\]"
     item_display_regex = "^\s{1,}identifiedDisplayName"
     is_item_id = re.compile(item_id_regex)
     is_item_display = re.compile(item_display_regex)
-    item_info = {}
     current_id = None
-
-    print_opening_dir(file_dir=info_path)
-    with open(file=info_path, mode="r", encoding="850") as f:
-        for line in f:
+    with open(file=db_path_in, mode="r", encoding="850") as f_in:
+        for line in f_in:
             if is_item_id.search(line):
-                current_id = int(line.split("[")[1].split("]")[0])
-                item_info[current_id] = {}
+                item_id = int(line.split("[")[1].split("]")[0])
+                if item_id in rename_list:
+                    current_id = item_id
+                else:
+                    current_id = None
             if is_item_display.search(line):
-                line_split = line.split("=")
-                display_name = line_split[1].strip()
-                display_name = display_name.split("\"")[1].strip()
-                item_info[current_id]["display_name"] = display_name
-                if debug:
-                    print(str(current_id) + "\t" + item_info[current_id]["display_name"])
-    return item_info
+                if current_id in rename_list:
+                    # rename the item
+                    line_split = line.split("=")
+                    line_split[1] = " \"" + rename_list[current_id] + "\",\n"
+                    line = "=".join(line_split)
+                    if debug:
+                        print("Renaming " + str(current_id) + ":\t\t" + line)
+            f_out.write(line)
+    f_out.close()
 
 
-# Prints a new item info lua from an existing one, given an item_db.txt
-def print_new_lua(item_db, item_info_path, out_file_path, debug):
-    f = open(file=out_file_path, mode="w")
-    header = "item_id\taegis_name\trathena_name\tdisplay_name\n"
-    f.write(header)
-    for item_id in item_db_names:
-        line = [str(item_id)]
-        line.append(item_db_names[item_id]["aegis_name"])
-        line.append(item_db_names[item_id]["rathena_name"])
-        try:
-            line.append(item_info_names[item_id]["display_name"])
-        except KeyError:
-            print("Missing from item_info: " + str(item_id) + " " + item_db_names[item_id]["rathena_name"])
-            pass
+# Writes out a new item_db.txt and renames the items from a list of items to rename.
+def rename_and_write_item_info(rename_list, db_path_in, db_path_out, debug):
+    f_out = open(file=db_path_out, mode="w", encoding="850")
 
-        if len(line) == 4:
-            line = "\t".join(line)
-            line += "\n"
-            f.write(line)
-
-    f.close()
-    print("Output file: " + out_file_path)
+    item_id_regex = "\[\d{3,5}\]"
+    item_display_regex = "^\s{1,}identifiedDisplayName"
+    is_item_id = re.compile(item_id_regex)
+    is_item_display = re.compile(item_display_regex)
+    current_id = None
+    with open(file=db_path_in, mode="r", encoding="850") as f_in:
+        for line in f_in:
+            if is_item_id.search(line):
+                item_id = int(line.split("[")[1].split("]")[0])
+                if item_id in rename_list:
+                    current_id = item_id
+                else:
+                    current_id = None
+            if is_item_display.search(line):
+                if current_id in rename_list:
+                    # rename the item
+                    line_split = line.split("=")
+                    line_split[1] = " \"" + rename_list[current_id] + "\",\n"
+                    line = "=".join(line_split)
+                    if debug:
+                        print("Renaming " + str(current_id) + ":\t\t" + line)
+            f_out.write(line)
+    f_out.close()
 
 
 # Tells the user in the console what file is currently being opened.
