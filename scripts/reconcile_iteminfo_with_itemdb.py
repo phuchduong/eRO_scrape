@@ -3,7 +3,11 @@
     File name: reconcile_iteminfo_with_itemdb.py.py
     Date created: February 2, 2017
     Python version: 3.6.1
+<<<<<<< HEAD
     Version: 0.2.0
+=======
+    Version: 0.1.9
+>>>>>>> ea35aea679fdcc3e373093c8d853aed8b93a0680
     Purpose:
         Prints a new item_info from an existing item_info,
         give the details of an item_db.txt.
@@ -32,7 +36,6 @@ def main():
     server_repo = "/essencera/"
     client_repo = "/eRODev/"
 
-
     # Builds an output folder if it doesn't exist within the same directory
     # as the executed script.
     out_folder_path = make_output_folder()
@@ -58,7 +61,7 @@ def main():
     # item infos
     item_info_input_path = repo_dir + client_repo + "/eRO Client Data/System/itemInfosryx.lub"
     item_info_output_path = out_folder_path + "itemInfosryx.lub"
-    rename_and_write_item_info(
+    rewrite_and_update_item_info(
         item_db=item_db,
         item_info_input_path=item_info_input_path,
         item_info_output_path=item_info_output_path,
@@ -101,74 +104,67 @@ def parse_item_names_from_item_db(db_path, debug):
     with open(file=db_path, mode="r") as f:
         for line in f:
             if is_item.match(line):
+                # Parse item line
+
                 line_split = line.split(",")
+                # 0  ID
                 item_id = int(line_split[0])
+                # 1  AegisName
                 aegis_name = line_split[1]
+                # 2  Name
                 rathena_name = line_split[2]
+                # 3  Type
+                # 4  Buy
+                # 5  Sell
+                # 6  Weight
+                # 7  ATK[:MATK]
+                # 8  DEF
+                # 9  Range
+                # 10 Slots
+                slot_count = line_split[10]
+                # 11 Job
+                # 12 Class
+                # 13 Gender
+                # 14 Loc
+                # 15 wLV
+                # 16 eLV[:maxLevel]
+                # 17 Refineable
+                # 18 View
+                # 19 { Script }
+                # 20 { OnEquip_Script }
+                # 21 { OnUnequip_Script }
                 item_db[item_id] = {
                     "aegis_name": aegis_name,
-                    "rathena_name": rathena_name
+                    "slot_count": slot_count,
+                    "rathena_name": rathena_name,
                 }
                 if debug:
                     print(str(item_id) + "\t" + aegis_name + "\t" + rathena_name)
     return item_db
 
 
-# Traveres an item_db.txt and gets all item_ids and item names.
-def parse_item_names_from_item_info(info_path, debug):
+# Writes out a new item_db.txt and renames the items from a list of items to rename.
+def rewrite_and_update_item_info(rename_list, db_path_in, db_path_out, debug):
+    f_out = open(file=db_path_out, mode="w", encoding="850")
+
     item_id_regex = "\[\d{3,5}\]"
     item_display_regex = "^\s{1,}identifiedDisplayName"
     is_item_id = re.compile(item_id_regex)
     is_item_display = re.compile(item_display_regex)
-    item_info = {}
     current_id = None
-
-    print_opening_dir(file_dir=info_path)
-    with open(file=info_path, mode="r", encoding="850") as f:
-        for line in f:
-            if is_item_id.search(line):
-                current_id = int(line.split("[")[1].split("]")[0])
-                item_info[current_id] = {}
-            if is_item_display.search(line):
-                line_split = line.split("=")
-                display_name = line_split[1].strip()
-                display_name = display_name.split("\"")[1].strip()
-                item_info[current_id]["display_name"] = display_name
-                if debug:
-                    print(str(current_id) + "\t" + item_info[current_id]["display_name"])
-    return item_info
-
-
-# Writes out a new item_db.txt and renames the items from a list of items to rename.
-def rename_and_write_item_info(item_db, item_info_input_path, item_info_output_path, debug):
-    f_out = open(file=item_info_output_path, mode="w", encoding="850")
-
-    # item id
-    item_id_regex = "\[\d{3,5}\]"
-    is_item_id = re.compile(item_id_regex)
-
-    # Slot count
-    slot_count_regex = "^\s{1,}slotCount\s{1,2}=\s{1,2}\d,"
-    is_slot_count = re.compile(slot_count_regex)
-
-    current_id = None
-    with open(file=item_info_input_path, mode="r", encoding="850") as f_in:
+    with open(file=db_path_in, mode="r", encoding="850") as f_in:
         for line in f_in:
-            # Finds keys that match an existing item_db entry
             if is_item_id.search(line):
                 item_id = int(line.split("[")[1].split("]")[0])
-                if current_id in item_db:
+                if item_id in rename_list:
                     current_id = item_id
                 else:
                     current_id = None
-
-            # Only parse line if current_id is an active item_id
-            # that exists in the item_db
-            if current_id is not None:
-                if is_slot_count.match(line):
-                    # slot count
+            if is_item_display.search(line):
+                if current_id in rename_list:
+                    # rename the item
                     line_split = line.split("=")
-                    line_split[1] = " \"" + item_db["slo"] + "\",\n"
+                    line_split[1] = " \"" + item_db["slot_count"] + "\",\n"
                     line = "=".join(line_split)
                     if debug:
                         print("Renaming " + str(current_id) + ":\t\t" + line)
