@@ -3,7 +3,7 @@
     File name: reconcile_iteminfo_with_itemdb.py.py
     Date created: February 2, 2017
     Python version: 3.6.1
-    Version: 0.1.0
+    Version: 0.2.0
     Purpose:
         Prints a new item_info from an existing item_info,
         give the details of an item_db.txt.
@@ -19,7 +19,7 @@ import subprocess as sp  # to open files in a text editor as a subprocess
 
 # script goes here
 def main():
-    debug_mode = True
+    debug_mode = False
     # Repo folder
     if path.isdir("C:/repos"):
         repo_dir = "C:/repos"
@@ -32,9 +32,6 @@ def main():
     server_repo = "/essencera/"
     client_repo = "/eRODev/"
 
-    # Input data files
-    # item_db = repo_dir + server_repo + "/db/pre-re/item_db.txt"
-    item_db = repo_dir + server_repo + "/db/import-tmpl/item_db.txt"
     item_info = repo_dir + client_repo + "/eRO Client Data/System/itemInfosryx.lub"
 
     # Builds an output folder if it doesn't exist within the same directory
@@ -45,22 +42,35 @@ def main():
     out_filename = "itemInfosryx.lub"
     out_path = out_folder_path + out_filename
 
-    item_db = parse_item_names_from_item_db(
-        db_path=item_db,
+    ero_item_db_path = repo_dir + server_repo + "/db/import-tmpl/item_db.txt"
+    ero_item_db = parse_item_names_from_item_db(
+        db_path=ero_item_db_path,
         debug=debug_mode
     )
-    print_new_lua(
-        item_db=item_db,
-        item_info_names=item_info,
-        out_file_path=out_path,
-        debug=debug_mode,
+
+    iro_item_db_path = repo_dir + server_repo + "/db/pre-re/item_db.txt"
+    iro_item_db = parse_item_names_from_item_db(
+        db_path=iro_item_db_path,
+        debug=debug_mode
     )
 
-    # Opens the new iteminfo.lua and item_db.txt in sublime text
-    program_dir = "C:\Program Files\Sublime Text 3\sublime_text.exe"
-    print("Done... Opening both item_infos in Sublime...")
-    sp.Popen([program_dir, item_info])
-    sp.Popen([program_dir, out_path])
+    # Merge two dictionaries together
+    item_db = {**ero_item_db, **iro_item_db}
+    print("ero_item_db:\t" + str(len(ero_item_db)) + "\titems found...")
+    print("iro_item_db:\t" + str(len(iro_item_db)) + "\titems found...")
+    print("combined_db:\t" + str(len(item_db)) + "\titems found...")
+    # print_new_lua(
+    #     item_db=item_db,
+    #     item_info_names=item_info,
+    #     out_file_path=out_path,
+    #     debug=debug_mode,
+    # )
+
+    # # Opens the new iteminfo.lua and item_db.txt in sublime text
+    # program_dir = "C:\Program Files\Sublime Text 3\sublime_text.exe"
+    # print("Done... Opening both item_infos in Sublime...")
+    # sp.Popen([program_dir, item_info])
+    # sp.Popen([program_dir, out_path])
 
 
 # Loads the local file system, else create a new one.
