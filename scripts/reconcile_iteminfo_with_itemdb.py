@@ -154,7 +154,7 @@ def rewrite_and_update_item_info(item_db, item_info_input_path, item_info_output
     slot_count_regex = "^\s{1,}slotCount\s{1,2}=\s{1,2}\d,"
     is_slot_count = re.compile(slot_count_regex)
 
-    change_log = {}
+    change_log = []
 
     current_id = None
     with open(file=item_info_input_path, mode="r", encoding="850") as f_in:
@@ -178,10 +178,8 @@ def rewrite_and_update_item_info(item_db, item_info_input_path, item_info_output
 
                     if old_slot_count != new_slot_count:
                         print(str(current_id) + ": Old=" + str(old_slot_count) + "\t" + "New=" + str(new_slot_count))
-                        change_log[current_id] = {
-                            "from": old_slot_count,
-                            "to": new_slot_count
-                        }
+                        log = str(item_id) + " " + item_db[item_id]["rathena_name"] + " now correctly displays [" +str(new_slot_count) + "] slot instead of [" + str(old_slot_count) + "] slot. (Coded by Tempy)"
+                        change_log.append(log)
                     line_split[1] = " " + str(new_slot_count) + ",\n"
                     line = "=".join(line_split)
                     if debug:
@@ -190,11 +188,7 @@ def rewrite_and_update_item_info(item_db, item_info_input_path, item_info_output
 
     # write a change log
     log_out = open(file=change_log_output_path, mode="w")
-    for item_id in change_log:
-        item_name = item_db[item_id]["rathena_name"]
-        from_stat = change_log[item_id]["from"]
-        to_stat = change_log[item_id]["to"]
-        line = str(item_id) + " " + item_name + " now correctly displays [" + str(to_stat) + "] slot instead of [" + str(from_stat) + "] slot. (Coded by Tempy)"
+    for line in change_log:
         print(line)
         log_out.write(line + "\n")
 
