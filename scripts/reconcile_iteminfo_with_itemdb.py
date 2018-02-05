@@ -32,15 +32,10 @@ def main():
     server_repo = "/essencera/"
     client_repo = "/eRODev/"
 
-    item_info = repo_dir + client_repo + "/eRO Client Data/System/itemInfosryx.lub"
 
     # Builds an output folder if it doesn't exist within the same directory
     # as the executed script.
     out_folder_path = make_output_folder()
-
-    # Output files
-    out_filename = "itemInfosryx.lub"
-    out_path = out_folder_path + out_filename
 
     ero_item_db_path = repo_dir + server_repo + "/db/import-tmpl/item_db.txt"
     ero_item_db = parse_item_names_from_item_db(
@@ -59,12 +54,16 @@ def main():
     print("ero_item_db:\t" + str(len(ero_item_db)) + "\titems found...")
     print("iro_item_db:\t" + str(len(iro_item_db)) + "\titems found...")
     print("combined_db:\t" + str(len(item_db)) + "\titems found...")
-    # print_new_lua(
-    #     item_db=item_db,
-    #     item_info_names=item_info,
-    #     out_file_path=out_path,
-    #     debug=debug_mode,
-    # )
+
+    # item infos
+    item_info_input_path = repo_dir + client_repo + "/eRO Client Data/System/itemInfosryx.lub"
+    item_info_output_path = out_folder_path + "itemInfosryx.lub"
+    rename_and_write_item_info(
+        item_db=item_db,
+        item_info_input_path=item_info_input_path,
+        item_info_output_path=item_info_output_path,
+        debug=debug_mode,
+    )
 
     # # Opens the new iteminfo.lua and item_db.txt in sublime text
     # program_dir = "C:\Program Files\Sublime Text 3\sublime_text.exe"
@@ -140,28 +139,41 @@ def parse_item_names_from_item_info(info_path, debug):
     return item_info
 
 
-# Prints a new item info lua from an existing one, given an item_db.txt
-def print_new_lua(item_db, item_info_path, out_file_path, debug):
-    f = open(file=out_file_path, mode="w")
-    header = "item_id\taegis_name\trathena_name\tdisplay_name\n"
-    f.write(header)
-    for item_id in item_db_names:
-        line = [str(item_id)]
-        line.append(item_db_names[item_id]["aegis_name"])
-        line.append(item_db_names[item_id]["rathena_name"])
-        try:
-            line.append(item_info_names[item_id]["display_name"])
-        except KeyError:
-            print("Missing from item_info: " + str(item_id) + " " + item_db_names[item_id]["rathena_name"])
-            pass
+# Writes out a new item_db.txt and renames the items from a list of items to rename.
+def rename_and_write_item_info(item_db, item_info_input_path, item_info_output_path, debug):
+    f_out = open(file=item_info_output_path, mode="w", encoding="850")
 
-        if len(line) == 4:
-            line = "\t".join(line)
-            line += "\n"
-            f.write(line)
+    # item id
+    item_id_regex = "\[\d{3,5}\]"
+    is_item_id = re.compile(item_id_regex)
 
-    f.close()
-    print("Output file: " + out_file_path)
+    # Slot count
+    slot_count_regex = "^\s{1,}slotCount\s{1,2}=\s{1,2}\d,"
+    is_slot_count = re.compile(slot_count_regex)
+
+    current_id = None
+    with open(file=item_info_input_path, mode="r", encoding="850") as f_in:
+        for line in f_in:
+            # Finds keys that match an existing item_db entry
+            if is_item_id.search(line):
+                item_id = int(line.split("[")[1].split("]")[0])
+                if current_id in item_db:
+                    current_id = item_id
+                else:
+                    current_id = None
+
+            # Only parse line if current_id is an active item_id
+            # that exists in the item_db
+            if current_id is not None:
+                if is_slot_count.match(line):
+                    # slot count
+                    line_split = line.split("=")
+                    line_split[1] = " \"" + item_db["slo"] + "\",\n"
+                    line = "=".join(line_split)
+                    if debug:
+                        print("Renaming " + str(current_id) + ":\t\t" + line)
+            f_out.write(line)
+    f_out.close()
 
 
 # Tells the user in the console what file is currently being opened.
