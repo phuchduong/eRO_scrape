@@ -3,11 +3,7 @@
     File name: reconcile_iteminfo_with_itemdb.py.py
     Date created: February 2, 2017
     Python version: 3.6.1
-<<<<<<< HEAD
-    Version: 0.2.0
-=======
-    Version: 0.1.9
->>>>>>> ea35aea679fdcc3e373093c8d853aed8b93a0680
+    Version: 0.3.0
     Purpose:
         Prints a new item_info from an existing item_info,
         give the details of an item_db.txt.
@@ -23,7 +19,7 @@ import subprocess as sp  # to open files in a text editor as a subprocess
 
 # script goes here
 def main():
-    debug_mode = False
+    debug_mode = True
     # Repo folder
     if path.isdir("C:/repos"):
         repo_dir = "C:/repos"
@@ -61,18 +57,21 @@ def main():
     # item infos
     item_info_input_path = repo_dir + client_repo + "/eRO Client Data/System/itemInfosryx.lub"
     item_info_output_path = out_folder_path + "itemInfosryx.lub"
+    change_log_output_path = out_folder_path + "changelog_reconcile_iteminfo_with_itemdb.txt"
     rewrite_and_update_item_info(
         item_db=item_db,
         item_info_input_path=item_info_input_path,
         item_info_output_path=item_info_output_path,
+        change_log_output_path=change_log_output_path,
         debug=debug_mode,
     )
 
-    # # Opens the new iteminfo.lua and item_db.txt in sublime text
-    # program_dir = "C:\Program Files\Sublime Text 3\sublime_text.exe"
-    # print("Done... Opening both item_infos in Sublime...")
-    # sp.Popen([program_dir, item_info])
-    # sp.Popen([program_dir, out_path])
+    # Opens the new iteminfo.lua and item_db.txt in sublime text
+    program_dir = "C:\Program Files\Sublime Text 3\sublime_text.exe"
+    print("Done... Opening both item_infos in Sublime...")
+    sp.Popen([program_dir, item_info_input_path])
+    sp.Popen([program_dir, item_info_output_path])
+    sp.Popen([program_dir, change_log_output_path])
 
 
 # Loads the local file system, else create a new one.
@@ -144,32 +143,63 @@ def parse_item_names_from_item_db(db_path, debug):
 
 
 # Writes out a new item_db.txt and renames the items from a list of items to rename.
-def rewrite_and_update_item_info(rename_list, db_path_in, db_path_out, debug):
-    f_out = open(file=db_path_out, mode="w", encoding="850")
+def rewrite_and_update_item_info(item_db, item_info_input_path, item_info_output_path, change_log_output_path, debug):
+    f_out = open(file=item_info_output_path, mode="w", encoding="850")
 
+    # item id
     item_id_regex = "\[\d{3,5}\]"
-    item_display_regex = "^\s{1,}identifiedDisplayName"
     is_item_id = re.compile(item_id_regex)
-    is_item_display = re.compile(item_display_regex)
+
+    # slot count
+    slot_count_regex = "^\s{1,}slotCount\s{1,2}=\s{1,2}\d,"
+    is_slot_count = re.compile(slot_count_regex)
+
+    change_log = {}
+
     current_id = None
-    with open(file=db_path_in, mode="r", encoding="850") as f_in:
+    with open(file=item_info_input_path, mode="r", encoding="850") as f_in:
         for line in f_in:
             if is_item_id.search(line):
                 item_id = int(line.split("[")[1].split("]")[0])
-                if item_id in rename_list:
+                if item_id in item_db:
                     current_id = item_id
                 else:
                     current_id = None
-            if is_item_display.search(line):
-                if current_id in rename_list:
-                    # rename the item
+            if is_slot_count.search(line):
+                if current_id in item_db:
+                    # Updating slot count
                     line_split = line.split("=")
-                    line_split[1] = " \"" + item_db["slot_count"] + "\",\n"
+                    old_slot_count = int(line_split[1].strip().replace(",", ""))
+
+                    try:
+                        new_slot_count = int(item_db[current_id]["slot_count"])
+                    except ValueError:
+                        new_slot_count = 0
+
+                    if old_slot_count != new_slot_count:
+                        print(str(current_id) + ": Old=" + str(old_slot_count) + "\t" + "New=" + str(new_slot_count))
+                        change_log[current_id] = {
+                            "from": old_slot_count,
+                            "to": new_slot_count
+                        }
+                    line_split[1] = " " + str(new_slot_count) + ",\n"
                     line = "=".join(line_split)
                     if debug:
-                        print("Renaming " + str(current_id) + ":\t\t" + line)
+                        print("Updating slot count: " + str(current_id) + ":\t\t" + line)
             f_out.write(line)
+
+    # write a change log
+    log_out = open(file=change_log_output_path, mode="w")
+    for item_id in change_log:
+        item_name = item_db[item_id]["rathena_name"]
+        from_stat = change_log[item_id]["from"]
+        to_stat = change_log[item_id]["to"]
+        line = str(item_id) + " " + item_name + " now correctly displays [" + str(to_stat) + "] slot instead of [" + str(from_stat) + "] slot. (Coded by Tempy)"
+        print(line)
+        log_out.write(line + "\n")
+
     f_out.close()
+    log_out.close()
 
 
 # Tells the user in the console what file is currently being opened.
