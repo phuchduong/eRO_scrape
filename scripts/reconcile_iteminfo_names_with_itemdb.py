@@ -43,29 +43,34 @@ def main():
         debug=debug_mode,
     )
 
-    ero_item_db_path_in = repo_dir + server_repo + "/db/import-tmpl/item_db.txt"
-    ero_item_db_path_out = out_folder_path + "/item_db.txt"
-    ero_log_path = out_folder_path + "/item_db_rename.txt"
-    write_out_item_db(
-        item_info_db=item_info_db,
-        db_path_in=ero_item_db_path_in,
-        db_path_out=ero_item_db_path_out,
-        log_path=ero_log_path,
-        debug=debug_mode
-    )
-
-    # iro_item_db_path = repo_dir + server_repo + "/db/pre-re/item_db.txt"
-    # iro_item_db = parse_item_names_from_item_db(
-    #     db_path=iro_item_db_path,
+    # ero_item_db_path_in = repo_dir + server_repo + "/db/import-tmpl/item_db.txt"
+    # ero_item_db_path_out = out_folder_path + "/item_db.txt"
+    # ero_log_path = out_folder_path + "/item_db_rename.txt"
+    # write_out_item_db(
+    #     item_info_db=item_info_db,
+    #     db_path_in=ero_item_db_path_in,
+    #     db_path_out=ero_item_db_path_out,
+    #     log_path=ero_log_path,
     #     debug=debug_mode
     # )
+
+    iro_item_db_path_in = repo_dir + server_repo + "/db/pre-re/item_db.txt"
+    iro_item_db_path_out = out_folder_path + "/item_db.txt"
+    iro_log_path = out_folder_path + "/item_db_rename.txt"
+    write_out_item_db(
+        item_info_db=item_info_db,
+        db_path_in=iro_item_db_path_in,
+        db_path_out=iro_item_db_path_out,
+        log_path=iro_log_path,
+        debug=debug_mode
+    )
 
     # Opens the new iteminfo.lua and item_db.txt in sublime text
     program_dir = "C:\Program Files\Sublime Text 3\sublime_text.exe"
     print("Done... Opening both item_infos in Sublime...")
-    sp.Popen([program_dir, ero_item_db_path_in])
-    sp.Popen([program_dir, ero_item_db_path_out])
-    sp.Popen([program_dir, ero_log_path])
+    sp.Popen([program_dir, iro_item_db_path_in])
+    sp.Popen([program_dir, iro_item_db_path_out])
+    sp.Popen([program_dir, iro_log_path])
 
 
 # Loads the local file system, else create a new one.
@@ -134,14 +139,17 @@ def write_out_item_db(item_info_db, db_path_in, db_path_out, log_path, debug):
                         line_split[1] = display_name_aegis
                         line_split[2] = display_name
                         new_line = ",".join(line_split)
-                        f_out.write(new_line)
+                        try:
+                            f_out.write(new_line)
 
-                        if(display_name != rathena_name):
-                            log_line = str(item_id) + " renaming db_name from " + rathena_name + " to " + display_name + ".\n"
-                            f_log.write(log_line)
-                        if(aegis_name != display_name_aegis):
-                            log_line = str(item_id) + " renaming db_name from " + aegis_name + " to " + display_name_aegis + ".\n"
-                            f_log.write(log_line)
+                            if(display_name != rathena_name):
+                                log_line = str(item_id) + " renaming @item_info display name from " + rathena_name + " to " + display_name + ".\n"
+                                f_log.write(log_line)
+                            if(aegis_name != display_name_aegis):
+                                log_line = str(item_id) + " renaming @item_info lookup name from " + aegis_name + " to " + display_name_aegis + ".\n"
+                                f_log.write(log_line)
+                        except UnicodeEncodeError:
+                            f_out.write(line)
                     else:
                         f_out.write(line)
                 else:
