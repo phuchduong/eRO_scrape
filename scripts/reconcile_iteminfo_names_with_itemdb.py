@@ -3,7 +3,7 @@
     File name: reconcile_iteminfo_names_with_itemdb.py
     Date created: February 7, 2017
     Python version: 3.6.1
-    Version: 0.1.0
+    Version: 1.0.0
     Purpose:
         Takes the item display name from an item_db and renames all the items
         in an item_db
@@ -49,7 +49,7 @@ def main():
     write_out_item_db(
         item_info_db=item_info_db,
         db_path_in=ero_item_db_path_in,
-        db_path_out=ero_log_path,
+        db_path_out=ero_item_db_path_out,
         log_path=ero_log_path,
         debug=debug_mode
     )
@@ -104,45 +104,50 @@ def write_out_item_db(item_info_db, db_path_in, db_path_out, log_path, debug):
                 line_split = line.split(",")
                 # 0  ID
                 item_id = int(line_split[0])
-                display_name = item_info_db[item_id]
-                display_name_aegis = display_name.replace(" ", "_")
-                # 1  AegisName
-                aegis_name = line_split[1]
-                # 2  Name
-                rathena_name = line_split[2]
-                # 3  Type
-                # 4  Buy
-                # 5  Sell
-                # 6  Weight
-                # 7  ATK[:MATK]
-                # 8  DEF
-                # 9  Range
-                # 10 Slots
-                # 11 Job
-                # 12 Class
-                # 13 Gender
-                # 14 Loc
-                # 15 wLV
-                # 16 eLV[:maxLevel]
-                # 17 Refineable
-                # 18 View
-                # 19 { Script }
-                # 20 { OnEquip_Script }
-                # 21 { OnUnequip_Script }
-                if(display_name != rathena_name or aegis_name != display_name_aegis):
-                    line_split[1] = display_name_aegis
-                    line_split[2] = display_name
-                    line = ",".join(line_split)
-                    f_out.write()
+                if item_id in item_info_db:
+                    display_name = item_info_db[item_id]
+                    display_name_aegis = display_name.replace(" ", "_")
+                    # 1  AegisName
+                    aegis_name = line_split[1]
+                    # 2  Name
+                    rathena_name = line_split[2]
+                    # 3  Type
+                    # 4  Buy
+                    # 5  Sell
+                    # 6  Weight
+                    # 7  ATK[:MATK]
+                    # 8  DEF
+                    # 9  Range
+                    # 10 Slots
+                    # 11 Job
+                    # 12 Class
+                    # 13 Gender
+                    # 14 Loc
+                    # 15 wLV
+                    # 16 eLV[:maxLevel]
+                    # 17 Refineable
+                    # 18 View
+                    # 19 { Script }
+                    # 20 { OnEquip_Script }
+                    # 21 { OnUnequip_Script }
+                    if(display_name != rathena_name or aegis_name != display_name_aegis):
+                        line_split[1] = display_name_aegis
+                        line_split[2] = display_name
+                        new_line = ",".join(line_split)
+                        f_out.write(new_line)
 
-                    if(display_name != rathena_name):
-                        log_line = str(item_id) + " renaming db_name from " + rathena_name + " to " + display_name + ".\n"
-                        f_log.write(log_line)
-                    if(aegis_name != display_name_aegis):
-                        log_line = str(item_id) + " renaming db_name from " + display_name_aegis + " to " + aegis_name + ".\n"
-                        f_log.write(log_line)
+                        if(display_name != rathena_name):
+                            log_line = str(item_id) + " renaming db_name from " + rathena_name + " to " + display_name + ".\n"
+                            f_log.write(log_line)
+                        if(aegis_name != display_name_aegis):
+                            log_line = str(item_id) + " renaming db_name from " + aegis_name + " to " + display_name_aegis + ".\n"
+                            f_log.write(log_line)
+                    else:
+                        f_out.write(line)
+                else:
+                    f_out.write(line)
             else:
-                f_out.write()
+                f_out.write(line)
     f_out.close()
     f_log.close()
 
@@ -171,7 +176,7 @@ def parse_item_names_from_item_info(item_info_input_path, debug):
                 # Updating slot count
                 line_split = line.split("=")
                 display_name = line_split[1].strip()[1:-2]  # removes quotes and comma
-                item_info_db[current_id] = display_name
+                item_info_db[current_id] = display_name.strip()
 
     f_in.close()
     print_writing_status(counter=len(item_info_db), file_dir=item_info_input_path)
