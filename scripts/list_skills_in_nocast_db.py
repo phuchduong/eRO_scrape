@@ -3,7 +3,7 @@
     File name: list_skills_in_nocast_db.py
     Date created: February 7, 2017
     Python version: 3.6.1
-    Version: 0.1.0
+    Version: 1.0.0
     Purpose:
         Takes on a skill_db to derive skill name and skill id. Then uses
         that information to ellaborate skill_ids inside of a skill_nocast_db.txt.
@@ -82,19 +82,19 @@ def make_output_folder():
 # Traveres an skill_nocast_db.txt and ellaborates on the skill name as commentary
 def write_out_skill_nocast_db(skill_db, db_path_in, db_path_out, debug):
     f_out = open(file=db_path_out, mode="w")
-    skill_nocast_regex = "^\d{1,5},\d{1,4}$"
+    skill_nocast_regex = "^(////)*(//// )*\d{1,5},\d{1,4}"
     is_skill_nocast_line = re.compile(skill_nocast_regex)
     with open(file=db_path_in, mode="r") as f_in:
         print_opening_dir(file_dir=db_path_in)
         for line in f_in:
             if is_skill_nocast_line.match(line):
-
+                print(line)
                 # Parse item line
-                line = line.split("\t")[0].trim()
-                skill_id = line.split(",")[0]
+                line = line.split("\t")[0].strip()
+                skill_id = int(line.split(",")[0])
 
-                line += "\t\\\\ " + skill_db[skill_id]
-        f_out.write(line)
+                line += "\t// " + skill_db[skill_id] + "\n"
+            f_out.write(line)
 
 
 # Takes in skill_db, parses it for skill name and id.
@@ -125,9 +125,10 @@ def parse_skill_db(item_info_input_path, debug):
                 # 15  inf3
                 # 16  name
                 # 17  description
-                skill_id = line_split[0]
+                skill_id = int(line_split[0])
                 skill_name = line_split[16]
-                skill_db[skill_id] = skill_name
+                skill_desc = line_split[17].split("//")[0]
+                skill_db[skill_id] = skill_name.strip() + "\t" + skill_desc.strip()
     print_writing_status(counter=len(skill_db), file_dir=item_info_input_path)
     return skill_db
 
