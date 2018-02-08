@@ -3,7 +3,7 @@
     File name: rename_quests.py
     Date created: February 2, 2017
     Python version: 3.6.1
-    Version: 0.1.0
+    Version: 0.2.0
     Purpose:
         Prints a new item_info from an existing item_info,
         give the details of an item_db.txt.
@@ -19,7 +19,7 @@ import subprocess as sp  # to open files in a text editor as a subprocess
 
 # script goes here
 def main():
-    debug_mode = True
+    debug_mode = False
     # Repo folder
     if path.isdir("C:/repos"):
         repo_dir = "C:/repos"
@@ -56,11 +56,17 @@ def main():
     print("combined_db:\t" + str(len(item_db)) + "\titems found...")
 
     script_conf_path = repo_dir + server_repo + "/npc/scripts_custom.conf"
+    filenames = get_quest_filenames(
+        script_conf=script_conf_path,
+        debug=debug_mode,
+    )
+
     change_log_output_path = out_folder_path + "quest_files_renamed.txt"
     quest_folder = practice_repo + "/npc/custom"
     rename_quest_files(
         script_conf=script_conf_path,
         quest_folder=quest_folder,
+        quest_filenames=filenames,
         log_file=change_log_output_path,
         debug=debug_mode,
     )
@@ -92,10 +98,87 @@ def make_output_folder():
 
 
 # scans a quest conf for quest and renames quest files based upon the final item.
+def get_quest_filenames(script_conf, debug):
+    start = "// Old Red Box Script Begin Scan\n"
+    stop = "// Old Red Box Script End Scan\n"
+    filenames = []
+    scan = False
+    with open(file=script_conf, mode="r") as f_in:
+        for line in f_in:
+            if line == start:
+                scan = True
+            if line == stop:
+                scan = False
+            if scan is True:
+                if line.startswith("npc:"):
+                    filename = line.split("/")[-1]
+                    filenames.append(filename)
+    return filenames
+
+# scans a quest conf for quest and renames quest files based upon the final item.
 def rename_quest_files(script_conf, quest_folder, log_file, debug):
+    start = "// Old Red Box Script Begin Scan\n"
+    stop = "// Old Red Box Script End Scan\n"
+    filenames = []
+    scan = False
+    with open(file=script_conf, mode="r") as f_in:
+        for line in f_in:
+            if line == start:
+                scan = True
+            if line == stop:
+                scan = False
+            if scan is True:
+                if line.startswith("npc:"):
+                    filename = line.split("/")[-1]
+                    filenames.append(filename)
+    return filenames
 
+# Traveres an item_db.txt and gets all item_ids and item names.
+def parse_item_names_from_item_db(db_path, debug):
+    item_regex = "^\d{3,5},"
+    item_db = {}
+    is_item = re.compile(item_regex)
+    print_opening_dir(file_dir=db_path)
+    with open(file=db_path, mode="r") as f:
+        for line in f:
+            if is_item.match(line):
+                # Parse item line
 
-
+                line_split = line.split(",")
+                # 0  ID
+                item_id = int(line_split[0])
+                # 1  AegisName
+                aegis_name = line_split[1]
+                # 2  Name
+                rathena_name = line_split[2]
+                # 3  Type
+                # 4  Buy
+                # 5  Sell
+                # 6  Weight
+                # 7  ATK[:MATK]
+                # 8  DEF
+                # 9  Range
+                # 10 Slots
+                slot_count = line_split[10]
+                # 11 Job
+                # 12 Class
+                # 13 Gender
+                # 14 Loc
+                # 15 wLV
+                # 16 eLV[:maxLevel]
+                # 17 Refineable
+                # 18 View
+                # 19 { Script }
+                # 20 { OnEquip_Script }
+                # 21 { OnUnequip_Script }
+                item_db[item_id] = {
+                    "aegis_name": aegis_name,
+                    "slot_count": slot_count,
+                    "rathena_name": rathena_name,
+                }
+                if debug:
+                    print(str(item_id) + "\t" + aegis_name + "\t" + rathena_name)
+    return item_db
 
 # Tells the user in the console what file is currently being opened.
 def print_opening_dir(file_dir):
