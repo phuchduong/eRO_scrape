@@ -31,7 +31,6 @@ def main():
     # Repos
     server_repo = "/essencera/"
     practice_repo = "/essencero_restoration/scripts/outputs/practice/essencera/"
-    client_repo = "/eRODev/"
 
     # Builds an output folder if it doesn't exist within the same directory
     # as the executed script.
@@ -61,20 +60,24 @@ def main():
         debug=debug_mode,
     )
 
-    change_log_output_path = out_folder_path + "quest_files_renamed.txt"
-    quest_folder = practice_repo + "/npc/custom"
-    rename_quest_files(
-        script_conf=script_conf_path,
+    quest_folder = repo_dir + practice_repo + "npc/custom/"
+    rewards = get_quest_rewards(
         quest_folder=quest_folder,
         quest_filenames=filenames,
-        log_file=change_log_output_path,
         debug=debug_mode,
     )
 
+    get_item_names(
+        rewards=rewards,
+        item_db=item_db,
+        debug=debug_mode
+    )
+
+    change_log_output_path = out_folder_path + "quest_files_renamed.txt"
     # Opens the new iteminfo.lua and item_db.txt in sublime text
-    program_dir = "C:\Program Files\Sublime Text 3\sublime_text.exe"
-    print("Done... Opening both item_infos in Sublime...")
-    sp.Popen([program_dir, change_log_output_path])
+    # program_dir = "C:\Program Files\Sublime Text 3\sublime_text.exe"
+    # print("Done... Opening both item_infos in Sublime...")
+    # sp.Popen([program_dir, change_log_output_path])
 
 
 # Loads the local file system, else create a new one.
@@ -111,27 +114,45 @@ def get_quest_filenames(script_conf, debug):
                 scan = False
             if scan is True:
                 if line.startswith("npc:"):
-                    filename = line.split("/")[-1]
+                    filename = line.split("/")[-1].strip()
                     filenames.append(filename)
     return filenames
 
+
+def get_item_names(rewards, item_db, debug):
+    for filename in rewards:
+        if len(rewards[filename]) == 1:
+            item_id = int(rewards[filename][0])
+            aegis_name = item_db[item_id]["aegis_name"]
+            slot_count = item_db[item_id]["slot_count"]
+            if slot_count == "":
+                slot_count = 0
+            else:
+                slot_count = int(slot_count)
+            if slot_count > 0:
+                aegis_name += "_[" + str(slot_count) + "]"
+            new_filename = aegis_name + ".txt"
+            spaces = " " * (23 - len(filename))
+            print("Old: " + filename + spaces + "New: " + new_filename)
+
+
 # scans a quest conf for quest and renames quest files based upon the final item.
-def rename_quest_files(script_conf, quest_folder, log_file, debug):
-    start = "// Old Red Box Script Begin Scan\n"
-    stop = "// Old Red Box Script End Scan\n"
-    filenames = []
-    scan = False
-    with open(file=script_conf, mode="r") as f_in:
-        for line in f_in:
-            if line == start:
-                scan = True
-            if line == stop:
-                scan = False
-            if scan is True:
-                if line.startswith("npc:"):
-                    filename = line.split("/")[-1]
-                    filenames.append(filename)
-    return filenames
+def get_quest_rewards(quest_folder, quest_filenames, debug):
+    rewards = {}
+    for filename in quest_filenames:
+        # for each file
+        quest_file_path = quest_folder + filename.replace("\n", "")
+        rewards[filename] = []
+        with open(file=quest_file_path, mode="r") as quest_file:
+            rewards_regex = "^\tsetarray .@rewards\[0\],\d{1,5};$"
+            is_reward = re.compile(rewards_regex)
+            for line in quest_file:
+                if is_reward.match(line):
+                    reward = line.split(",")[1].strip()
+                    reward = reward.replace(";", "")
+                    rewards[filename].append(reward)
+    return rewards
+
 
 # Traveres an item_db.txt and gets all item_ids and item names.
 def parse_item_names_from_item_db(db_path, debug):
@@ -179,6 +200,7 @@ def parse_item_names_from_item_db(db_path, debug):
                 if debug:
                     print(str(item_id) + "\t" + aegis_name + "\t" + rathena_name)
     return item_db
+
 
 # Tells the user in the console what file is currently being opened.
 def print_opening_dir(file_dir):
