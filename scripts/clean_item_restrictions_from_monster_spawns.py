@@ -3,7 +3,7 @@
     File name: clean_item_restrictions_from_monster_spawns.py
     Date created: March 17, 2018
     Python version: 3.6.1
-    Version: 0.2.0
+    Version: 1.0.0
     Purpose:
         Goal: Fix, the item_trade.txt
             • Get a list of monsters that naturally spawn.
@@ -18,6 +18,7 @@
     Linkedin: https://www.linkedin.com/in/phuchduong/
 '''
 import re
+from datetime import datetime
 
 
 def main():
@@ -32,45 +33,48 @@ def main():
         spawn_file_filepath = spawn_path_root + filename
         spawn_db = get_monster_spawns_from_file(
             file_path=spawn_file_filepath, spawn_db=spawn_db)
-
-    for mob_db in spawn_db:
-        print(str(mob_db) + "\t|\tCount: " + str(spawn_db[mob_db]))
     ##########################################################################
     # 2 Link those monsters that spawn, with their drops.
+    # 3 Get a list of items that are dropped by monsters that naturally spawn
     ##########################################################################
     item_drop_list = []
 
-    item_drop_list = get_list_of_item_drops(item_drop_list)
-    ##########################################################################
-    # 3 Get a list of items that are dropped by monsters that naturally spawn
-    ##########################################################################
+    item_drop_list = get_list_of_item_drops(spawn_db)
 
     ##########################################################################
     # 4 can through, the item_trade.txt
-    ##########################################################################
-
-    ##########################################################################
     # 5 Find items, that are dropped by monsters that spawn naturally,
-    ##########################################################################
-
-    ##########################################################################
     # 6 Then: remove those items.
     ##########################################################################
+    old_item_trade_path = 'D:/repos/essencera/db/pre-re/item_trade.txt'
+    new_item_trade_path = 'D:/repos/essencero_restoration/scripts/output/item_trade.txt'
+    now = datetime.now().strftime("%Y%m%d%H%M%S")
 
+    restricted_item_regex = '^\d{3,5},\d{1,3},\d{1,3}'
+    is_restricted_item = re.compile(restricted_item_regex)
+    with open(file=old_item_trade_path, mode="r") as old_f:
+        for line in old_f:
+            if is_restricted_item.match(line):
+                line_split = line.split(",")
+                item_id = int(line_split[0])
+                if item_id in item_drop_list:
+                    print(line)
 
 def get_monster_spawns_from_file(file_path, spawn_db):
+    # monster search function
+    monster_regex = "^\w{1,},\d,\d"
+    is_monster = re.compile(monster_regex)
+
     # opened the file
     with open(file=file_path, mode="r") as in_f:
         # grab each monster line
 
-        # monster search function
-        monster_regex = "^\w{1,},\d,\d"
-        is_monster = re.compile(monster_regex)
         for line in in_f:
             # looping through the file
             if is_monster.match(line):
                 line_split = line.split("\t")
                 line_split = line_split[3].split(",")
+
                 try:
                     mob_id = int(line_split[0])
                     spawn_count = int(line_split[1])
@@ -151,6 +155,44 @@ def get_monster_spawn_table():
     ]
     return monster_spawn_tables
 
+
+def get_list_of_item_drops(spawn_db):
+    db_path1 = "D:/repos/essencera/db/pre-re/mob_db.txt"
+    db_path2 = "D:/repos/essencera/db/import-tmpl/mob_db.txt"
+    # print(spawn_db)
+    monster_regex = '\d{4,}'
+    starts_with_id = re.compile(monster_regex)
+    item_list = []
+    drop_index = [37, 39, 41, 43, 45, 47, 49, 51, 53]
+    with open(file=db_path1, mode="r") as in_f:
+        for line in in_f:
+            if starts_with_id.match(line):
+                line_split = line.split(",")
+                mob_id = int(line_split[0])
+                if mob_id in spawn_db:
+                    for i in drop_index:
+                        try:
+                            item_id = int(line_split[i])
+                            if item_id not in item_list:
+                                item_list.append(item_id)
+                        except ValueError:
+                            pass
+    with open(file=db_path2, mode="r") as in_f:
+        for line in in_f:
+            if starts_with_id.match(line):
+                line_split = line.split(",")
+                mob_id = int(line_split[0])
+                if mob_id in spawn_db:
+                    for i in drop_index:
+                        try:
+                            item_id = int(line_split[i])
+                            if item_id not in item_list:
+                                item_list.append(item_id)
+                        except ValueError:
+                            pass
+    item_list = sorted(item_list)
+    # print(item_list)
+    return item_list
 
 main()
 
